@@ -3,7 +3,7 @@ package pt.up.fe.iart.proj1
 import pt.up.fe.iart.proj1.collections.QueueLike
 import scala.annotation.tailrec
 import scala.collection.mutable
-
+import scala.collection.immutable
 /* Possible search results that various search algorithms can return */
 sealed abstract class SearchResult[A]
 
@@ -16,7 +16,7 @@ case class CutOff[A]() extends SearchResult[A]
 object GraphSearch {
     def apply[S, A](problem: Problem[S, A], frontier: QueueLike[Node[S, A]]) = {
         @tailrec
-        def loop(frontier: QueueLike[Node[S, A]], explored: scala.collection.immutable.HashSet[S]): SearchResult[List[A]] =
+        def loop(frontier: QueueLike[Node[S, A]], explored: immutable.HashSet[S]): SearchResult[List[A]] =
             frontier.removeFirst() match {
                 case None => Failure()
                 case Some(node) if problem.goalTest(node.state) =>
@@ -37,15 +37,15 @@ object GraphSearch {
 
 object AStarSearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
-        GraphSearch(problem, new scala.collection.mutable.PriorityQueue[Node[S, A]]()(Ordering.by(AStarHeuristic(_, problem))))
+        GraphSearch(problem, new  mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](AStarHeuristic(_, problem)).reverse))
 
-    private def AStarHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
+    private def AStarHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]): Double =
         node.pathCost + problem.estimatedCostToGoal(node.state) //f(n) = g(n) + h(n)
 }
 
 object BestFirstSearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
-        GraphSearch(problem, new scala.collection.mutable.PriorityQueue[Node[S, A]]()(Ordering.by(BestFirstHeuristic(_, problem))))
+        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](BestFirstHeuristic(_, problem)).reverse))
 
     private def BestFirstHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
         problem.estimatedCostToGoal(node.state) //f(n) = h(n)
@@ -53,7 +53,7 @@ object BestFirstSearch {
 
 object BranchAndBoundSearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
-        GraphSearch(problem, new scala.collection.mutable.PriorityQueue[Node[S, A]]()(Ordering.by(BranchAndBoundHeuristic(_, problem))))
+        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](BranchAndBoundHeuristic(_, problem)).reverse))
 
     private def BranchAndBoundHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
         node.pathCost //f(n) = g(n)
