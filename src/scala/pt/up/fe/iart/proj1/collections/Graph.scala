@@ -1,15 +1,22 @@
 package pt.up.fe.iart.proj1.collections
 
-import collection.mutable
-import pt.up.fe.iart.proj1.problem.{GenericLocation, Filiation, GasStation, Location}
+import scala.collection.mutable
+import pt.up.fe.iart.proj1.problem._
+import scala.Some
+import pt.up.fe.iart.proj1._
+import java.io.FileInputStream
+import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
+import pt.up.fe.iart.proj1.parser.{GraphVisitor, PTPParser, PTPLexer}
+import scala.Some
+import pt.up.fe.iart.proj1.Success
 
-class Graph[V] {
+class Graph[V <: Any] {
     private var _lastVertex = -1
-    private val _vertices = mutable.Map[V, Int]().withDefaultValue(-1);
+    private val _vertices = mutable.Map[V, Int]().withDefaultValue(-1)
     private val _adjacencyMatrix = mutable.Map[Int, mutable.Map[Int, Double]]() withDefaultValue mutable.Map.empty
 
     def vertices = _vertices.keySet
-    def verticesMap = _vertices
+    def verticesMap = _vertices.toMap
 
     def addVertex(value: V) = {
         if (! _vertices.contains(value)) {
@@ -19,7 +26,7 @@ class Graph[V] {
         }
     }
 
-    def removeVertex(value: V) = {
+    def removeVertex(value: V) {
         if (_vertices.contains(value)) {
             val index = _vertices(value)
             _vertices.remove(value)
@@ -37,7 +44,14 @@ class Graph[V] {
         case None => false
     }
 
-    override def toString = s"${_vertices}\n${_adjacencyMatrix}"
+    case class Edge(from: V, to: V, weight: Double)
+    def edges: List[Edge] = {
+        val invertVertices = _vertices.map{_.swap}
+        for { (from, row) <- _adjacencyMatrix
+              (to, weight) <- row } yield Edge(invertVertices(from), invertVertices(to), weight)
+    }.toList
+
+    override def toString = s"${_vertices.keys.mkString("\n")}\n${edges.mkString("\n")}"
 
     def weightMatrix : Array[Array[Option[Double]]] = {
         val result = Array.fill[Option[Double]](_lastVertex + 1, _lastVertex + 1)(None)
@@ -57,6 +71,8 @@ class Graph[V] {
             result(src)(destination) = Some(src)
         result
     }
+
+    import scala.language.implicitConversions
 
     implicit def optionToDouble(weight:Option[Double]) = weight match{
         case Some(x) => x
