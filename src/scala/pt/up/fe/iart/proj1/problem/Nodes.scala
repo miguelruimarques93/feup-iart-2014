@@ -3,14 +3,15 @@ package pt.up.fe.iart.proj1.problem
 object Location {
     type Position = (Int, Int)
 }
-import Location.Position
+import pt.up.fe.iart.proj1.problem.Location.Position
 
 abstract sealed class Location()
 
-case class GenericLocation(val position : Position) extends Location()
+case class GenericLocation(position : Position) extends Location()
 
-case class GasStation(val position : Position) extends Location()
+case class GasStation(position : Position) extends Location()
 
-case class PatientLocation(val position : Position) extends Location()
+case class PatientLocation(position : Position) extends Location()
 
-case class Filiation(val position : Position, val hasGarage: Boolean) extends Location()
+case class Filiation(position : Position, hasGarage: Boolean) extends Location()
+
