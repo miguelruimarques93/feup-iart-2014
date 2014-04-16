@@ -27,3 +27,5 @@ INT: [0-9]+ ;
 REAL: [0-9]+ '.' [0-9]* ;
 
 WS : [ \t\r\n]+ -> skip;
+COMMENT         :   '/*' .*? '*/'       -> skip ;
+LINE_COMMENT    :   '//' .*? '\r'? '\n' -> skip ;
