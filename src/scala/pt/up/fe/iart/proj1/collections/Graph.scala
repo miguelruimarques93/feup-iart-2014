@@ -100,28 +100,41 @@ class Graph[V <: Any] {
 }
 
 object Main {
+    def time[A](label: String)(block: => A): A = {
+        val now = System.currentTimeMillis()
+        val ret = block
+        println(label + ": " + (System.currentTimeMillis() - now) + " ms.")
+        ret
+    }
+
     def main (args: Array[String]) {
-        val g = new Graph[Location]()
-        g addVertex GasStation((0, 0))
-        g addVertex Filiation((1, 0), true)
-        g addVertex GenericLocation((2, 0))
-
-        g.addEdge(GasStation((0, 0)), Filiation((1, 0), true), 20)
-        g.addEdge(Filiation((1, 0), true), GasStation((0, 0)), 10)
-        g.addEdge(GasStation((0, 0)), GenericLocation((2, 0)), 5)
-        g.addEdge(GenericLocation((2, 0)), Filiation((1, 0), true), 5)
-
-        val vs = g.verticesMap.filter {
-            case (GenericLocation(_), _) => false
-            case _ => true
+        if (args.length < 1) {
+            Console.err.println("Not enough arguments.")
+            sys.exit(1)
         }
 
-        println(vs.mkString(", ") + "\n")
+        val inputFile = args(0)
 
+        val is = new FileInputStream(inputFile)
+        val input = new ANTLRInputStream(is)
+        val lexer = new PTPLexer(input)
+        val tokens = new CommonTokenStream(lexer)
+        val parser = new PTPParser(tokens)
+        val tree = parser.map()
+
+        val visitor = new GraphVisitor()
+        val g = visitor.visit(tree)
+
+        val vs = g.verticesMap.map(_.swap)
+        println(vs)
         g.getShortestPaths match {
-            case (weights, predecessors) =>
-                println(weights.deep.mkString("\n") + "\n")
-                println(predecessors.deep.mkString("\n"))
+            case (weights, _) =>
+                val ptp = new PatientTransportationProblem(vs, weights, 3, 100.0)
+                val sr = time("DepthFirstSearch")(DepthFirstSearch(ptp))
+                sr match {
+                    case Success(path) => println(path.map(vs).mkString(", "))
+                    case _ => println(sr)
+                }
         }
     }
 }
