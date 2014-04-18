@@ -14,10 +14,25 @@ stmt : node_stmt #node
 
 edge_stmt : 'Edge' '(' from=node_stmt ',' to=node_stmt ',' weight=(INT|REAL) ')';
 
-node_stmt : 'GasStation' '(' position ')'                   #GasStation
-          | 'GenericLocation' '(' position ')'              #GenericLocation
-          | 'PatientLocation' '(' position ')'              #PatientLocation
-          | 'Filiation' '(' position ',' bool ')'           #Filiation
+node_stmt : gasStation
+          | genericLocation
+          | patientLocation
+          | filiation
+          ;
+
+patient : 'Patient' '(' filiation ')'
+        ;
+
+gasStation : 'GasStation' '(' position ')'
+           ;
+
+genericLocation : 'GenericLocation' '(' position ')'
+                ;
+
+patientLocation : 'PatientLocation' '(' position ',' patient ')'
+                ;
+
+filiation : 'Filiation' '(' position ',' bool ')'
           ;
 
 position : '(' x=INT ',' y=INT ')' ;

@@ -129,8 +129,8 @@ object Main {
         println(vs)
         g.getShortestPaths match {
             case (weights, _) =>
-                val ptp = new PatientTransportationProblem(vs, weights, 3, 100.0)
-                val sr = time("DepthFirstSearch")(DepthFirstSearch(ptp))
+                val ptp = new PatientTransportationProblem(vs, weights, 100, 100.0)
+                val sr = time("AStarSearch")(AStarSearch(ptp))
                 sr match {
                     case Success(path) => println(path.map(vs).mkString(", "))
                     case _ => println(sr)

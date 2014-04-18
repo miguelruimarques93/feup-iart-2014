@@ -10,10 +10,17 @@ import java.io.FileInputStream
 
 class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
 
+    private object patientVisitor extends PTPBaseVisitor[Patient] {
+        override def visitPatient(ctx: PatientContext): Patient = Patient(locationVisitor.visit(ctx.filiation()) match {
+            case f: Filiation => f;
+            case _ => throw new Error("Patient can only go to Filiation")
+        })
+    }
+
     private object locationVisitor extends PTPBaseVisitor[Location] {
         override def visitGenericLocation(ctx: GenericLocationContext): Location = GenericLocation(positionVisitor.visit(ctx.position()))
 
-        override def visitPatientLocation(ctx: PatientLocationContext): Location = PatientLocation(positionVisitor.visit(ctx.position()))
+        override def visitPatientLocation(ctx: PatientLocationContext): Location = PatientLocation(positionVisitor.visit(ctx.position()), patientVisitor.visit(ctx.patient()))
 
         override def visitFiliation(ctx: FiliationContext): Location = Filiation(positionVisitor.visit(ctx.position()), boolVisitor.visit(ctx.bool()))
 
@@ -32,13 +39,14 @@ class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
     }
 
     override def visitMap(ctx: MapContext): Graph[Location] = {
-        for { stmt <- scala.collection.JavaConversions.asScalaBuffer(ctx.stmt) }
+        for {stmt <- scala.collection.JavaConversions.asScalaBuffer(ctx.stmt)}
             visit(stmt)
         _graph
     }
 
     override def visitNode(ctx: NodeContext): Graph[Location] = {
-        _graph.addVertex(locationVisitor.visit(ctx.node_stmt()))
+        val loc = locationVisitor.visit(ctx.node_stmt())
+        _graph.addVertex(loc)
         _graph
     }
 
