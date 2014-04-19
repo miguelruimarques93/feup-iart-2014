@@ -11,10 +11,14 @@ import java.io.FileInputStream
 class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
 
     private object patientVisitor extends PTPBaseVisitor[Patient] {
-        override def visitPatient(ctx: PatientContext): Patient = Patient(locationVisitor.visit(ctx.filiation()) match {
-            case f: Filiation => f;
-            case _ => throw new Error("Patient can only go to Filiation")
-        })
+        override def visitPatient(ctx: PatientContext): Patient =
+            if (ctx.filiation() == null)
+                PatientWithoutDestination()
+            else
+                PatientWithDestination(locationVisitor.visit(ctx.filiation()) match {
+                    case f: Filiation => f;
+                    case _ => throw new Error("Patient can only go to Filiation")
+                })
     }
 
     private object locationVisitor extends PTPBaseVisitor[Location] {

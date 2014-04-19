@@ -20,7 +20,7 @@ node_stmt : gasStation
           | filiation
           ;
 
-patient : 'Patient' '(' filiation ')'
+patient : 'Patient' '(' filiation? ')'
         ;
 
 gasStation : 'GasStation' '(' position ')'

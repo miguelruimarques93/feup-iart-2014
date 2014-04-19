@@ -12,11 +12,17 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
     val nonPickupLocations = map.filter { case (_, GenericLocation(_)) | (_, PatientLocation(_, _)) => false; case _ => true }.keySet.to[HashSet]
     val doubleCosts = costs.map(_.map{case Some(d) => d; case None => Double.MaxValue})
 
+    private def nearestFiliation(locIndex: Int): Int =
+        { for (fl <- filiations) yield fl -> doubleCosts(locIndex)(fl) }.minBy(_._2)._1
+
     val estimatedCostToDeliverMap = {
         val filiationsMap = map.filterKeys(filiations.contains(_)).map(_.swap)
         for (pl <- patientLocations) yield {
             val patient = map(pl) match { case PatientLocation(_, p) => p }
-            patient -> doubleCosts(pl)(filiationsMap(patient.destination))
+            patient -> doubleCosts(pl)(patient.destination match {
+                case Some(dest) => filiationsMap(dest)
+                case None => nearestFiliation(pl)
+            })
         }
     }.toMap
 

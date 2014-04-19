@@ -1,6 +1,17 @@
 package pt.up.fe.iart.proj1.problem
 
-case class Patient(val destination: Filiation)
+sealed trait Patient {
+    def destination: Option[Location] = None
+}
+
+case class PatientWithDestination(dest: Filiation) extends Patient {
+    override def destination: Option[Location] = Some(dest)
+    override def toString = s"Patient($destination)"
+}
+
+case class PatientWithoutDestination() extends Patient {
+    override def toString = "Patient()"
+}
 
 object Location {
     type Position = (Int, Int)
