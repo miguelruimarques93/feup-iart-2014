@@ -12,12 +12,6 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
     val nonPickupLocations = map.filter { case (_, GenericLocation(_)) | (_, PatientLocation(_, _)) => false; case _ => true }.keySet.to[HashSet]
     val doubleCosts = costs.map(_.map{case Some(d) => d; case None => Double.MaxValue})
 
-    val estimatedCostToPickupMap = {
-        for (pl <- patientLocations) yield pl -> {
-            for ((row, from) <- doubleCosts.zipWithIndex if from != pl) yield row(pl)
-        }.min
-    }.toMap
-
     val estimatedCostToDeliverMap = {
         val filiationsMap = map.filterKeys(filiations.contains(_)).map(_.swap)
         for (pl <- patientLocations) yield {
@@ -26,8 +20,14 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
         }
     }.toMap
 
+    val estimatedCostToPickupAndDeliverMap = {
+        for (pl <- patientLocations) yield pl -> ({
+            for ((row, from) <- doubleCosts.zipWithIndex if from != pl) yield row(pl)
+        }.min + (map(pl) match { case PatientLocation(_, patient) => estimatedCostToDeliverMap(patient) case _ => 0 }))
+    }.toMap
+
     override def estimatedCostToGoal(from: State): Double = {
-        estimatedCostToPickupMap.filterKeys{k => from.currentLocation != k && !from.previousLocations.contains(k)}.foldLeft(0.0)(_ + _._2)
+        estimatedCostToPickupAndDeliverMap.filterKeys{k => from.currentLocation != k && !from.previousLocations.contains(k)}.foldLeft(0.0)(_ + _._2)
         + from.patientsAmbulance.map(estimatedCostToDeliverMap).sum
     }
 
