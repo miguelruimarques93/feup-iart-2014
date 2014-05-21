@@ -2,6 +2,7 @@ GasStation((0, 0))
 Filiation((1, 0), true)
 GenericLocation((2, 0))
 PatientLocation((3, 0), Patient(Filiation((1, 0), true)))
+
 Edge(GasStation((0, 0)), Filiation((1, 0), true), 20.5)
 Edge(Filiation((1, 0), true), GasStation((0, 0)), 10)
 Edge(GasStation((0, 0)), GenericLocation((2, 0)), 5)

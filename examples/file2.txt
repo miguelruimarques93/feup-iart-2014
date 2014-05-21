@@ -15,18 +15,14 @@ PatientLocation((4,2), Patient())
 
 Edge(Filiation((2,4), true), GenericLocation((2,3)), 15)
 Edge(GenericLocation((2,3)), Filiation((2,4), true), 5)
-
 Edge(GenericLocation((2,3)), PatientLocation((1,2), Patient()), 5)
 Edge(GenericLocation((2,3)), PatientLocation((3,3), Patient()), 5)
-
 Edge(PatientLocation((1,2), Patient()), PatientLocation((0,2), Patient(Filiation((2,4), true))), 5)
 Edge(PatientLocation((0,2), Patient(Filiation((2,4), true))), PatientLocation((1,1), Patient()), 5)
 Edge(PatientLocation((1,1), Patient()), GenericLocation((2,0)), 5)
-
 Edge(PatientLocation((3,3), Patient()), PatientLocation((4,2), Patient()), 5)
 Edge(PatientLocation((4,2), Patient()), PatientLocation((3,1), Patient(Filiation((2,4), true))), 5)
 Edge(PatientLocation((3,1), Patient(Filiation((2,4), true))), GenericLocation((2,0)), 5)
-
 Edge(GasStation((2,2)), GenericLocation((2,3)), 10)
 Edge(Filiation((2,1), false), GasStation((2,2)), 50)
 Edge(GenericLocation((2, 0)), Filiation((2,1), false), 10)

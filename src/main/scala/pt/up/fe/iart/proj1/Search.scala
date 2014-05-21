@@ -4,6 +4,7 @@ import pt.up.fe.iart.proj1.collections.QueueLike
 import scala.annotation.tailrec
 import scala.collection.mutable
 import scala.collection.immutable
+
 /* Possible search results that various search algorithms can return */
 sealed abstract class SearchResult[A]
 
@@ -16,8 +17,10 @@ case class CutOff[A]() extends SearchResult[A]
 object GraphSearch {
     def apply[S, A](problem: Problem[S, A], frontier: QueueLike[Node[S, A]]) = {
         @tailrec
-        def loop(frontier: QueueLike[Node[S, A]], explored: immutable.HashSet[S]): SearchResult[List[A]] =
-            frontier.removeFirst() match {
+        def loop(frontier: QueueLike[Node[S, A]], explored: immutable.HashSet[S]): SearchResult[List[A]] = {
+            val n = frontier.removeFirst()
+            // println(n)
+            n match {
                 case None => Failure()
                 case Some(node) if problem.goalTest(node.state) =>
                     Success(node.solution)
@@ -26,10 +29,12 @@ object GraphSearch {
                         loop(frontier, explored)
                     else {
                         val acts = problem.actions(node.state)
+                        // println(acts)
                         acts.foreach((a: A) => frontier.insert(Node.childNode(problem, node, a)))
                         loop(frontier, explored + node.state)
                     }
             }
+        }
 
         loop(frontier.insert(Node(problem.initialState)), scala.collection.immutable.HashSet.empty)
     }
@@ -86,11 +91,11 @@ object DepthLimitedSearch {
                     case n :: rest =>
                         recursiveDLS(n, problem, limit) match {
                             case Failure() => loop(rest, cutoffOccured)
-                            case CutOff() => loop(rest, true)
+                            case CutOff() => loop(rest, cutoffOccured = true)
                             case ret => ret
                         }
                 }
-            loop(problem.actions(node.state).map(Node.childNode(problem, node, _)), false)
+            loop(problem.actions(node.state).map(Node.childNode(problem, node, _)), cutoffOccured = false)
         }
     }
 }

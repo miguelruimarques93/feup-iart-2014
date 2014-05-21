@@ -5,7 +5,9 @@ import pt.up.fe.iart.proj1.problem._
 import pt.up.fe.iart.proj1.parser.PTPParser._
 import pt.up.fe.iart.proj1.problem.PatientLocation
 import pt.up.fe.iart.proj1.problem.GenericLocation
+
 import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
+
 import java.io.FileInputStream
 
 class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
@@ -66,7 +68,7 @@ class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
     private val _graph = new Graph[Location]()
 }
 
-object GraphVisitor {
+/*object GraphVisitor {
     def main(args: Array[String]) {
 
         if (args.length < 1) {
@@ -88,4 +90,4 @@ object GraphVisitor {
         val graph = visitor.visit(tree)
         println(graph)
     }
-}
+}*/

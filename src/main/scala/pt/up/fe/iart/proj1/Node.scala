@@ -13,6 +13,8 @@ class Node[S, A](val state: S, val parent: Option[Node[S, A]], val action: Optio
             }
         loop(this, List.empty)
     }
+
+    override def toString: String = state.toString
 }
 
 /* Factory for easy Node creation */

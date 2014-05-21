@@ -6,16 +6,13 @@ sealed trait Patient {
 
 case class PatientWithDestination(dest: Filiation) extends Patient {
     override def destination: Option[Location] = Some(dest)
-    override def toString = s"Patient($destination)"
+    override def toString = s"Patient($dest)"
 }
 
 case class PatientWithoutDestination() extends Patient {
     override def toString = "Patient()"
 }
 
-object Location {
-    type Position = (Int, Int)
-}
 import pt.up.fe.iart.proj1.problem.Location.Position
 
 abstract sealed class Location(val pos: Position) {
@@ -33,3 +30,31 @@ case class PatientLocation(position : Position, patient: Patient) extends Locati
 
 case class Filiation(position : Position, hasGarage: Boolean) extends Location(position)
 
+object Location {
+    type Position = (Int, Int)
+
+    def patient(location: Location) = location match {
+        case PatientLocation(_, p) => Some(p)
+        case _ => None
+    }
+
+    def isPatientLocation(location: Location) = location match {
+        case PatientLocation(_, _) => true
+        case _ => false
+    }
+
+    def isGasStation(location: Location) = location match {
+        case GasStation(_) => true
+        case _ => false
+    }
+
+    def isFiliation(location: Location) = location match {
+        case Filiation(_, _) => true
+        case _ => false
+    }
+
+    def isGenericLocation(location: Location) = location match {
+        case GenericLocation(_) => true
+        case _ => false
+    }
+}
