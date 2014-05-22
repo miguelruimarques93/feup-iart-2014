@@ -15,23 +15,26 @@ case class PatientWithoutDestination() extends Patient {
 
 import pt.up.fe.iart.proj1.problem.Location.Position
 
-abstract sealed class Location(val pos: Position) {
+abstract sealed class Location(private var _position: Position) {
     override def equals(obj: scala.Any): Boolean = obj match {
-        case loc: Location => pos == loc.pos
+        case loc: Location => _position == loc._position
         case _ => false
     }
+
+    def position = _position
+    def position_=(p: Position) = _position = p
 }
 
-case class GenericLocation(position : Position) extends Location(position)
+case class GenericLocation(override var position : Position) extends Location(position)
 
-case class GasStation(position : Position) extends Location(position)
+case class GasStation(override var position : Position) extends Location(position)
 
-case class PatientLocation(position : Position, patient: Patient) extends Location(position)
+case class PatientLocation(override var position : Position, patient: Patient) extends Location(position)
 
-case class Filiation(position : Position, hasGarage: Boolean) extends Location(position)
+case class Filiation(override var position : Position, hasGarage: Boolean) extends Location(position)
 
 object Location {
-    type Position = (Int, Int)
+    type Position = (Double, Double)
 
     def patient(location: Location) = location match {
         case PatientLocation(_, p) => Some(p)

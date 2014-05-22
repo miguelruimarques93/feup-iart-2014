@@ -2,7 +2,6 @@ package pt.up.fe.iart.proj1.collections
 
 import scala.collection.mutable
 import pt.up.fe.iart.proj1.problem._
-import scala.Some
 import pt.up.fe.iart.proj1._
 import java.io.FileInputStream
 import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
