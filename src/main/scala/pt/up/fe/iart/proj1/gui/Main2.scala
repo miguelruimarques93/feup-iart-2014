@@ -4,7 +4,7 @@ import scala.collection.mutable
 import scala.swing._
 import edu.uci.ics.jung
 import jung.visualization.renderers.Renderer.VertexLabel.Position
-import edu.uci.ics.jung.visualization.{Layer, RenderContext, VisualizationViewer}
+import edu.uci.ics.jung.visualization.{RenderContext, VisualizationViewer}
 import edu.uci.ics.jung.algorithms.layout.StaticLayout
 import jung.graph.DirectedSparseGraph
 
@@ -20,15 +20,16 @@ import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
 import pt.up.fe.iart.proj1.parser.{GraphVisitor, PTPParser, PTPLexer}
 import pt.up.fe.iart.proj1.problem
 import scala.swing.TabbedPane.Page
-import scala.swing.event.UIElementResized
 import scala.swing.Dimension
+import scala.swing.ListView.Renderer
 import scala.Some
 import scala.swing.event.SelectionChanged
-import pt.up.fe.iart.proj1.gui.event.{EdgePropertyChanged, VertexPropertyChanged, VertexRemovedEvent, EdgeRemovedEvent}
+import pt.up.fe.iart.proj1.gui.event.EdgePropertyChanged
+import pt.up.fe.iart.proj1.gui.event.VertexRemovedEvent
+import pt.up.fe.iart.proj1.gui.event.EdgeRemovedEvent
 import scala.swing.event.UIElementResized
+import pt.up.fe.iart.proj1.gui.event.VertexPropertyChanged
 import pt.up.fe.iart.proj1.gui.control.VertexMoveEvent
-import pt.up.fe.iart.proj1.gui.MouseMenus.{VertexPopupMenu, EdgePopupMenu}
-import scala.swing.ListView.Renderer
 
 object Main2 extends SwingApplication {
 
@@ -83,9 +84,8 @@ object Main2 extends SwingApplication {
     private class StaticLayoutExtended[V, E](g: edu.uci.ics.jung.graph.Graph[V, E], s: Dimension) extends StaticLayout[V, E](g, s) {
         override def setSize(size: Dimension): Unit = {
             if (size != null && graph != null) {
-                val oldSize: Dimension = this.size
                 this.size = size
-                initialize
+                initialize()
             }
         }
     }
@@ -98,7 +98,7 @@ object Main2 extends SwingApplication {
     }
 
     def createVertex(p: Point2D) = {
-        val index: Int = if (vertexMap.isEmpty) 0 else (vertexMap.keys.max + 1)
+        val index: Int = if (vertexMap.isEmpty) 0 else vertexMap.keys.max + 1
         vertexMap.put(index, GenericLocation((p.getX - margin._1, p.getY - margin._2)))
         println(s"Vertices: $vertexMap")
         index
@@ -177,13 +177,19 @@ object Main2 extends SwingApplication {
 
             case VertexRemovedEvent(index: Int) =>
                 if (selectedPage == Page.Graph) {
+                    if (Location.isFiliation(vertexMap(index)))
+                        vertexMap transform {
+                            case (_, PatientLocation(position, PatientWithDestination(`index`))) => PatientLocation(position, Patient())
+                            case (_, loc) => loc
+                        }
+
                     vertexMap.remove(index)
                     edgesMap.retain {
                         case ((from, to), _) => from != index && to != index
                     }
                 }
 
-            case ev: EdgeRemovedEvent[(Int, Int)] =>
+            case ev : EdgeRemovedEvent[(Int, Int) @unchecked] =>
                 if (selectedPage == Page.Graph) {
                     edgesMap.remove(ev.edge)
                 }
@@ -258,7 +264,7 @@ object Main2 extends SwingApplication {
             }
         })
 
-        val edgeStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, Array(10.0f), 0.0f);
+        val edgeStroke = new BasicStroke(1.0f, BasicStroke.CAP_BUTT, BasicStroke.JOIN_MITER, 10.0f, Array(10.0f), 0.0f)
 
         rc.setEdgeStrokeTransformer((edge: (Int, Int)) => edgeStroke)
 
@@ -316,7 +322,7 @@ object Main2 extends SwingApplication {
                     }
                 }
 
-            case ev: EdgeRemovedEvent[(Int, Int)] =>
+            case ev: EdgeRemovedEvent[(Int, Int) @unchecked] =>
                 if (selectedPage == Page.PatientGraph) {
                     val edge = ev.edge
                     val fromVer = vertexMap(edge._1)
@@ -430,7 +436,7 @@ object Main2 extends SwingApplication {
 
                                 for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
 
-                                Some(new PrintWriter(fc.selectedFile)).foreach { p => p.write(g.toString); p.close}
+                                Some(new PrintWriter(fc.selectedFile)).foreach { p => p.write(g.toString); p.close()}
 
                             case Cancel =>
                             case Error => println("Error")
@@ -448,7 +454,7 @@ object Main2 extends SwingApplication {
             case ev: SelectionChanged =>
                 val page = tabs.selection.page
 
-                if (tabs.selection.page.content == graphComponent) {
+                if (page.content == graphComponent) {
                     val oldSize = patientGraphVV.getSize
                     graphVV.getGraphLayout.setGraph(graph)
                     graphVV.getGraphLayout.setInitializer(initializer _)
@@ -457,7 +463,7 @@ object Main2 extends SwingApplication {
                     graphModeComboBox.visible = true
                     patientGraphModeComboBox.visible = false
                 }
-                else if (tabs.selection.page.content == patientGraphComponent) {
+                else if (page.content == patientGraphComponent) {
                     val oldSize = patientGraphVV.getSize
                     patientGraphVV.getGraphLayout.setGraph(patientGraph)
                     patientGraphVV.getGraphLayout.setInitializer(initializer _)
@@ -506,7 +512,7 @@ object Main2 extends SwingApplication {
             (index, loc) <- tempVertexMap if !problem.Location.isPatientLocation(loc)
         } yield {
             index -> {
-                loc match {
+                (loc: @unchecked) match {
                     case problem.GenericLocation(pos) => GenericLocation(pos)
                     case problem.GasStation(pos) => GasStation(pos)
                     case problem.Filiation(pos, hasGarage) => Filiation(pos, hasGarage)
@@ -517,7 +523,7 @@ object Main2 extends SwingApplication {
         vertexMap ++= nonPatientLocationMap ++ (for {
             (index, loc) <- tempVertexMap if problem.Location.isPatientLocation(loc)
         } yield {
-            index -> (loc match {
+            index -> ((loc: @unchecked) match {
                 case pl@problem.PatientLocation(pos, _) => PatientLocation(pos, pl.patient.destination match {
                     case Some(dest) => Patient(verticesMap(dest))
                     case None => Patient()
