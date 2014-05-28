@@ -1,11 +1,5 @@
 grammar PTP;
 
-@header {
-
-package pt.up.fe.iart.proj1.parser;
-
-}
-
 map : stmt+ ;
 
 stmt : node_stmt #node
