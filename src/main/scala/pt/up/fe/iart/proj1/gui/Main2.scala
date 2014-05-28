@@ -414,8 +414,8 @@ object Main2 extends SwingApplication {
 
                                 val tempLocs = for {(index, loc) <- vertexMap} yield index -> {
                                     loc match {
-                                        case GenericLocation(position) => problem.GenericLocation(position)
-                                        case GasStation(position) => problem.GasStation(position)
+                                        case gl @ GenericLocation(_) => problem.GenericLocation(gl.position)
+                                        case gs @ GasStation(_) => problem.GasStation(gs.position)
                                         case Filiation(position, hasGarage) => problem.Filiation(position, hasGarage)
                                         case PatientLocation(position, patient) if patient.hasDestination =>
                                             problem.PatientLocation(
@@ -513,8 +513,8 @@ object Main2 extends SwingApplication {
         } yield {
             index -> {
                 (loc: @unchecked) match {
-                    case problem.GenericLocation(pos) => GenericLocation(pos)
-                    case problem.GasStation(pos) => GasStation(pos)
+                    case gl @ problem.GenericLocation(_) => GenericLocation(gl.position)
+                    case gs @ problem.GasStation(_) => GasStation(gs.position)
                     case problem.Filiation(pos, hasGarage) => Filiation(pos, hasGarage)
                 }
             }
