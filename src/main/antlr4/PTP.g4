@@ -35,7 +35,7 @@ patientLocation : 'PatientLocation' '(' position ',' patient ')'
 filiation : 'Filiation' '(' position ',' bool ')'
           ;
 
-position : '(' x=INT ',' y=INT ')' ;
+position : '(' x=(INT|REAL) ',' y=(INT|REAL) ')' ;
 bool : 'true' | 'false' ;
 
 INT: [0-9]+ ;

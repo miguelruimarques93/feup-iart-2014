@@ -12,4 +12,7 @@ libraryDependencies += "net.sf.jung" % "jung-visualization" % "2.0.1"
 
 libraryDependencies += "org.scala-lang" % "scala-swing" % "2.10.4"
 
-unmanagedSourceDirectories in Compile += baseDirectory.value / "gen" / "main" / "java"
+unmanagedSourceDirectories in Compile ++= Seq(
+    baseDirectory.value / "gen" / "main" / "java",
+    baseDirectory.value / "src" / "main" / "java"
+)

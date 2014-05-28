@@ -10,9 +10,8 @@ import java.awt.geom.Point2D
 import edu.uci.ics.jung
 import jung.visualization.RenderContext
 import jung.visualization.control._
-import jung.visualization.annotations.{ AnnotatingGraphMousePlugin }
-import edu.uci.ics.jung.visualization.annotations.AnnotatingModalGraphMouse.ModeKeyAdapter
-import scala.swing.{Dimension, ComboBox}
+import jung.visualization.annotations.AnnotatingGraphMousePlugin
+import scala.swing.Dimension
 import javax.swing.{ButtonGroup, JRadioButtonMenuItem, JMenu, JComboBox}
 import javax.swing.plaf.basic.BasicIconFactory
 
@@ -25,14 +24,14 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
 
     protected var editingPlugin : EditingMousePlugin[V, E] = null
     protected var labelEditingPlugin : LabelEditingGraphMousePlugin[V, E] = null
-    protected var popupEditingPlugin : EditingPopupMousePlugin[V, E] = null
-    protected var annotatingPlugin : AnnotatingGraphMousePlugin[V, E] = null
+    protected var _popupEditingPlugin : EditingPopupMousePlugin[V, E] = null
 
+    def popupEditingPlugin = _popupEditingPlugin
 
     protected val basicTransformer = rc.getMultiLayerTransformer
 
     override def loadPlugins(): Unit = {
-        pickingPlugin = new PickingMousePlugin[V, E]
+        pickingPlugin = new PickingMousePlugin[V, E]()
         animatedPickingPlugin = new AnimatedPickingGraphMousePlugin[V, E]
         translatingPlugin = new TranslatingGraphMousePlugin(InputEvent.BUTTON1_MASK)
         scalingPlugin = new ScalingGraphMousePlugin(new CrossoverScalingControl(), 0, in, out)
@@ -40,8 +39,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         shearingPlugin = new ShearingGraphMousePlugin()
         editingPlugin = new EditingMousePlugin[V, E](vertexFactory, edgeFactory)
         labelEditingPlugin = new LabelEditingGraphMousePlugin[V, E]()
-        annotatingPlugin = new AnnotatingGraphMousePlugin[V, E](rc)
-        popupEditingPlugin = new EditingPopupMousePlugin[V, E](vertexFactory, edgeFactory)
+        _popupEditingPlugin = new EditingPopupMousePlugin[V, E](vertexFactory)
         add(scalingPlugin);
         setMode(ModalGraphMouse.Mode.EDITING);
     }
@@ -66,23 +64,21 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(rotatingPlugin)
         remove(shearingPlugin)
         remove(editingPlugin)
-        remove(annotatingPlugin)
         add(pickingPlugin)
         add(animatedPickingPlugin)
         add(labelEditingPlugin)
-        add(popupEditingPlugin)
+        add(_popupEditingPlugin)
     }
 
     override protected def setTransformingMode() : Unit = {
         remove(pickingPlugin)
         remove(animatedPickingPlugin)
         remove(editingPlugin)
-        remove(annotatingPlugin)
         add(translatingPlugin)
         add(rotatingPlugin)
         add(shearingPlugin)
         add(labelEditingPlugin)
-        add(popupEditingPlugin)
+        add(_popupEditingPlugin)
     }
 
     protected def setEditingMode() : Unit = {
@@ -92,9 +88,8 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(rotatingPlugin)
         remove(shearingPlugin)
         remove(labelEditingPlugin)
-        remove(annotatingPlugin)
         add(editingPlugin)
-        add(popupEditingPlugin)
+        add(_popupEditingPlugin)
     }
 
     protected def setAnnotatingMode() : Unit = {
@@ -105,8 +100,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(shearingPlugin)
         remove(labelEditingPlugin)
         remove(editingPlugin)
-        remove(popupEditingPlugin)
-        add(annotatingPlugin)
+        remove(_popupEditingPlugin)
     }
 
     override def getModeComboBox: JComboBox[_] = {
@@ -172,8 +166,6 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
     }
 
     class ModeKeyAdapter(graphMouse: ModalGraphMouse, t: Char = 't', p: Char = 'p', e: Char = 'e', a: Char = 'a') extends KeyAdapter {
-
-
         override def keyTyped(event: KeyEvent): Unit = {
             val keyChar = event.getKeyChar;
             if(keyChar == t) {
@@ -185,16 +177,20 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
             } else if(keyChar == e) {
                 event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
                 graphMouse.setMode(Mode.EDITING);
-            } else if(keyChar == a) {
-                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                graphMouse.setMode(Mode.ANNOTATING);
             }
         }
     }
 
     loadPlugins()
-    setModeKeyListener(new ModeKeyAdapter(this))
+
+    private val mka = new ModeKeyAdapter(this)
+
+
+    def lockMode = setModeKeyListener(null)
+    def unlockMode = setModeKeyListener(mka)
+
+    unlockMode
 
     def movePublisher = pickingPlugin.asInstanceOf[PickingMousePlugin[V, E]]
-    def popupPublisher = popupEditingPlugin
+    def popupPublisher = _popupEditingPlugin
 }

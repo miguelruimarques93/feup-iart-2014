@@ -49,7 +49,7 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
 
     override def estimatedCostToGoal(from: State) = {
         estimatedCostToPickupAndDeliverMap.filterKeys { k => from.currentLocation != k && !from.previousLocations.contains(k)}.foldLeft(0.0)(_ + _._2)
-        +from.patientsAmbulance.map(p => mapIndices(patientDestination(p))).distinct.map(doubleCosts(from.currentLocation)).sum
+        + from.patientsAmbulance.map(p => mapIndices(patientDestination(p))).distinct.map(doubleCosts(from.currentLocation)).sum
     }
 
     override def stepCost(from: State, action: Int, to: State): Double = doubleCosts(from.currentLocation)(action)

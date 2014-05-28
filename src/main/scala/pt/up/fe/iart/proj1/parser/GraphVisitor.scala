@@ -34,7 +34,7 @@ class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
     }
 
     private object positionVisitor extends PTPBaseVisitor[Location.Position] {
-        override def visitPosition(ctx: PositionContext): Location.Position = (ctx.x.getText.toInt, ctx.y.getText.toInt)
+        override def visitPosition(ctx: PositionContext): Location.Position = (ctx.x.getText.toDouble, ctx.y.getText.toDouble)
     }
 
     private object boolVisitor extends PTPBaseVisitor[Boolean] {
@@ -67,27 +67,3 @@ class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
 
     private val _graph = new Graph[Location]()
 }
-
-/*object GraphVisitor {
-    def main(args: Array[String]) {
-
-        if (args.length < 1) {
-            Console.err.println("Not enough arguments.")
-            sys.exit(1)
-        }
-
-        val inputFile = args(0)
-
-
-        val is = new FileInputStream(inputFile)
-        val input = new ANTLRInputStream(is)
-        val lexer = new PTPLexer(input)
-        val tokens = new CommonTokenStream(lexer)
-        val parser = new PTPParser(tokens)
-        val tree = parser.map()
-
-        val visitor = new GraphVisitor()
-        val graph = visitor.visit(tree)
-        println(graph)
-    }
-}*/

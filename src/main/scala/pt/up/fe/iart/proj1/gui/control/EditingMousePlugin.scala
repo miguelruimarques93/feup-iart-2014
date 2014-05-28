@@ -109,12 +109,6 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
                         transformArrowShape(down, e.point)
                         vv.addPostRenderPaintable(arrowPaintable)
                     }
-                } else {
-                    // make a new vertex
-                    val newVertex = vertexFactory(p)
-                    val layout = vv.getModel.getGraphLayout
-                    graph.addVertex(newVertex)
-                    layout.setLocation(newVertex, vv.getRenderContext.getMultiLayerTransformer.inverseTransform(e.point))
                 }
             }
             vv.repaint()
@@ -128,7 +122,10 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
                 val vertex = pickSupport.getVertex(layout, p.getX, p.getY)
                 if (vertex != null && startVertex.isDefined) {
                     val graph = layout.getGraph
-                    graph.addEdge(edgeFactory(startVertex.get, vertex), startVertex.get, vertex, edgeType)
+                    val edge = edgeFactory(startVertex.get, vertex)
+                    if (edge != null) {
+                        graph.addEdge(edge, startVertex.get, vertex, edgeType)
+                    }
                     vv.repaint()
                 }
             }

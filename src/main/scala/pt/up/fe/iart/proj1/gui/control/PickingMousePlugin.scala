@@ -16,9 +16,9 @@ import scala.Some
 import scala.swing.event.MouseDragged
 import scala.collection.JavaConversions._
 
-case class VertexMoveEvent[V](vertex: V, newLoc: (Double, Double)) extends Event
+case class VertexMoveEvent[V](vertex: V, offset: (Double, Double)) extends Event
 
-class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN_MASK, addToSelectionModifiers: Int = InputEvent.BUTTON1_MASK | InputEvent.SHIFT_MASK)
+class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN_MASK, addToSelectionModifiers: Int = InputEvent.BUTTON1_DOWN_MASK | InputEvent.SHIFT_MASK)
     extends AbstractGraphMousePlugin(selectionModifiers)
     with MousePublisher
     with MouseMotionPublisher
@@ -29,9 +29,9 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
     protected var offset = (0.0, 0.0)
     protected val rect = new Rectangle2D.Float
 
-    protected var _lensColor = Color.cyan
-
     down = null
+
+    protected var _lensColor = Color.cyan
 
     def lensColor: Color = _lensColor
     def lensColor_=(c: Color) = _lensColor = c
@@ -161,7 +161,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
                     val vp = layout.transform(v)
                     vp.setLocation(vp.getX + dx, vp.getY + dy)
                     layout.setLocation(v, vp)
-                    publish(VertexMoveEvent(v, (vp.getX, vp.getY)))
+                    publish(VertexMoveEvent(v, (dx, dy)))
                 }
                 down = p
             } else {
