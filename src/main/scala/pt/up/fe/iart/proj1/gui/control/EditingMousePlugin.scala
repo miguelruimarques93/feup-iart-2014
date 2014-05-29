@@ -9,7 +9,7 @@ import awt.event.InputEvent
 import awt.geom.{AffineTransform, QuadCurve2D, Point2D}
 
 import edu.uci.ics.jung
-import jung.visualization.control.{AbstractGraphMousePlugin}
+import jung.visualization.control.AbstractGraphMousePlugin
 import jung.visualization.{VisualizationServer, VisualizationViewer}
 import jung.graph.util.EdgeType
 import jung.visualization.util.ArrowFactory
@@ -147,6 +147,6 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
         case e: MouseEntered =>
             e.source.cursor = Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR)
         case e: MouseExited =>
-            e.source.cursor = Cursor.getDefaultCursor()
+            e.source.cursor = Cursor.getDefaultCursor
     }
 }

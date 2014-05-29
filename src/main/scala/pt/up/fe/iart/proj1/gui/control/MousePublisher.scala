@@ -9,9 +9,6 @@ import scala.swing.event.MouseEntered
 import scala.swing.event.MouseExited
 import scala.swing.event.MouseReleased
 
-/**
- * Created by miguel on 22-05-2014.
- */
 trait MousePublisher extends MouseListener with Publisher
 {
     override def mouseClicked(e: awt.event.MouseEvent): Unit = publish(new MouseClicked(e))

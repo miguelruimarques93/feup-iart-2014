@@ -69,7 +69,7 @@ class Viewer(g: Graph[problem.Location], rawSolution: List[(problem.Location, Li
         case ((loc, ptAmb, gLevel), loc2) => (loc, ptAmb, gLevel, loc2)
     }
 
-    val edgesMap = (g.edges).map { edge => (verticesMap(edge.from), verticesMap(edge.to)) -> edge.weight}.toMap
+    val edgesMap = g.edges.map { edge => (verticesMap(edge.from), verticesMap(edge.to)) -> edge.weight}.toMap
 
     def graph: DirectedSparseGraph[Int, (Int, Int)] = {
         val graph = new DirectedSparseGraph[Int, (Int, Int)]

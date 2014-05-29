@@ -43,12 +43,9 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
     }
 
     val estimatedCostToPickupMap = {
-        for (pl <- patientLocations) yield pl -> ({
+        for (pl <- patientLocations) yield pl -> {
             for ((row, from) <- doubleCosts.zipWithIndex if from != pl) yield row(pl)
-        }.min /*+ (map(pl) match {
-            case PatientLocation(_, patient) => estimatedCostToDeliverMap(patient)
-            case _ => 0
-        })*/)
+        }.min
     }.toMap
 
     private def distinctBy[A, B](fun: A => B, list: List[A]): List[A] = {
@@ -98,7 +95,7 @@ class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[O
         println("estimatedCostToPickupMap: " + e)
         println("estimatedCostToDeliver: " + e2)
         println("total: " + (e + e2))
-        println
+        println()
     }
 
     override def stepCost(from: State, action: Int, to: State): Double = doubleCosts(from.currentLocation)(action)

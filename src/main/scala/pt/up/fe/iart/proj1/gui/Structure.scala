@@ -36,7 +36,7 @@ abstract sealed class Location(private var _position: Position) {
 
 case class GenericLocation(override var position: Position) extends Location(position)
 case class GasStation(override var position: Position) extends Location(position)
-case class Filiation(override var position: Position, val hasGarage: Boolean) extends Location(position)
+case class Filiation(override var position: Position, hasGarage: Boolean) extends Location(position)
 case class PatientLocation(override var position: Position, patient: Patient) extends Location(position)
 
 object Location {

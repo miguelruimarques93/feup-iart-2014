@@ -142,7 +142,7 @@ object Editor extends SwingApplication {
         gm.setMode(ModalGraphMouse.Mode.PICKING)
         patientGraphModeComboBox.selection.item = ModalGraphMouse.Mode.PICKING
 
-        gm.lockMode
+        gm.lockMode()
 
         val popupPlugin = gm.popupEditingPlugin
 
@@ -285,7 +285,7 @@ object Editor extends SwingApplication {
         gm.setMode(ModalGraphMouse.Mode.EDITING)
         patientGraphModeComboBox.selection.item = ModalGraphMouse.Mode.EDITING
 
-        gm.lockMode
+        gm.lockMode()
 
         val popupPlugin = gm.popupEditingPlugin
 
@@ -395,7 +395,7 @@ object Editor extends SwingApplication {
                     case Approve =>
                         val g = new Graph[problem.Location]
 
-                        val tempLocs = for {(index, loc) <- vertexMap} yield index -> {
+                        val tempLocations = for {(index, loc) <- vertexMap} yield index -> {
                             loc match {
                                 case gl@GenericLocation(_) => problem.GenericLocation(gl.position)
                                 case gs@GasStation(_) => problem.GasStation(gs.position)
@@ -411,11 +411,11 @@ object Editor extends SwingApplication {
                             }
                         }
 
-                        println(tempLocs)
+                        println(tempLocations)
 
-                        val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocs(from), tempLocs(to)) -> weight
+                        val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocations(from), tempLocations(to)) -> weight
 
-                        for {(_, loc) <- tempLocs} g.addVertex(loc)
+                        for {(_, loc) <- tempLocations} g.addVertex(loc)
 
                         for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
 

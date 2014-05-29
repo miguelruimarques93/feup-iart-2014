@@ -40,13 +40,13 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         editingPlugin = new EditingMousePlugin[V, E](vertexFactory, edgeFactory)
         labelEditingPlugin = new LabelEditingGraphMousePlugin[V, E]()
         _popupEditingPlugin = new EditingPopupMousePlugin[V, E](vertexFactory)
-        add(scalingPlugin);
-        setMode(ModalGraphMouse.Mode.EDITING);
+        add(scalingPlugin)
+        setMode(ModalGraphMouse.Mode.EDITING)
     }
 
     override def setMode(mode: Mode): Unit =
         if (this.mode != mode) {
-            fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED, this.mode, ItemEvent.DESELECTED));
+            fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED, this.mode, ItemEvent.DESELECTED))
             this.mode = mode
             mode match {
                 case ModalGraphMouse.Mode.TRANSFORMING => setTransformingMode()
@@ -56,7 +56,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
             }
 
             if (modeBox != null) modeBox.setSelectedIndex(mode.ordinal())
-            fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED, this.mode, ItemEvent.SELECTED));
+            fireItemStateChanged(new ItemEvent(this, ItemEvent.ITEM_STATE_CHANGED, this.mode, ItemEvent.SELECTED))
         }
 
     override protected def setPickingMode() : Unit = {
@@ -167,16 +167,16 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
 
     class ModeKeyAdapter(graphMouse: ModalGraphMouse, t: Char = 't', p: Char = 'p', e: Char = 'e', a: Char = 'a') extends KeyAdapter {
         override def keyTyped(event: KeyEvent): Unit = {
-            val keyChar = event.getKeyChar;
+            val keyChar = event.getKeyChar
             if(keyChar == t) {
-                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR));
-                graphMouse.setMode(Mode.TRANSFORMING);
+                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.DEFAULT_CURSOR))
+                graphMouse.setMode(Mode.TRANSFORMING)
             } else if(keyChar == p) {
-                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-                graphMouse.setMode(Mode.PICKING);
+                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR))
+                graphMouse.setMode(Mode.PICKING)
             } else if(keyChar == e) {
-                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR));
-                graphMouse.setMode(Mode.EDITING);
+                event.getSource.asInstanceOf[Component].setCursor(Cursor.getPredefinedCursor(Cursor.CROSSHAIR_CURSOR))
+                graphMouse.setMode(Mode.EDITING)
             }
         }
     }
@@ -186,10 +186,10 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
     private val mka = new ModeKeyAdapter(this)
 
 
-    def lockMode = setModeKeyListener(null)
-    def unlockMode = setModeKeyListener(mka)
+    def lockMode() = setModeKeyListener(null)
+    def unlockMode() = setModeKeyListener(mka)
 
-    unlockMode
+    unlockMode()
 
     def movePublisher = pickingPlugin.asInstanceOf[PickingMousePlugin[V, E]]
     def popupPublisher = _popupEditingPlugin

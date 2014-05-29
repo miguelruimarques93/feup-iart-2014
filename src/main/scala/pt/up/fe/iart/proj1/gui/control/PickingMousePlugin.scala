@@ -49,7 +49,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
         override def paint(g: Graphics): Unit = {
             val oldColor = g.getColor
             g setColor _lensColor
-            g.asInstanceOf[Graphics2D] draw(rect)
+            g.asInstanceOf[Graphics2D] draw rect
             g setColor oldColor
         }
     }
@@ -74,7 +74,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
                     val v = pickSupport.getVertex(layout, down.getX, down.getY)
                     if (v != null) {
                         vertex = Some(v)
-                        if (pickedVertexState.isPicked(vertex.get) == false) {
+                        if (!pickedVertexState.isPicked(vertex.get)) {
                             pickedVertexState.clear()
                             pickedVertexState.pick(vertex.get, true)
                         }
@@ -118,7 +118,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
                         e != null
                     })
                     {
-                        pickedEdgeState.pick(edge.get, !pickedEdgeState.isPicked(edge.get));
+                        pickedEdgeState.pick(edge.get, !pickedEdgeState.isPicked(edge.get))
                     }
                 }
             }
@@ -130,7 +130,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
                 if (down != null) {
                     val out = e.point
 
-                    if (vertex.isEmpty && !heyThatsTooClose(down, out, 5))
+                    if (vertex.isEmpty && !heyThatIsTooClose(down, out, 5))
                         pickContainedVertices(vv, down, out, e.modifiers == modifiers)
                 }
             }
@@ -176,7 +176,7 @@ class PickingMousePlugin[V, E](selectionModifiers: Int = InputEvent.BUTTON1_DOWN
         case e: MouseExited => e.source.cursor = Cursor.getDefaultCursor
     }
 
-    def heyThatsTooClose(p: Point2D, q: Point2D, min: Double): Boolean = math.abs(p.getX - q.getX) < min && math.abs(p.getY - q.getY) < min
+    def heyThatIsTooClose(p: Point2D, q: Point2D, min: Double): Boolean = math.abs(p.getX - q.getX) < min && math.abs(p.getY - q.getY) < min
 
     def pickContainedVertices(vv: VisualizationViewer[V, E], down: Point2D, out: Point2D, clear: Boolean) = {
         val layout = vv.getGraphLayout

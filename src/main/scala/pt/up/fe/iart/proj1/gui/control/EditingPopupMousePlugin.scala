@@ -26,7 +26,7 @@ class EditingPopupMousePlugin[V, E](vertexFactory: Point2D => V) extends Abstrac
 
     private def updateVertexMenu(v: V, vv: VisualizationViewer[V, E], point: Point2D): Unit = {
         if (_vertexPopup != null) {
-            for { comp <- _vertexPopup.getComponents() } {
+            for { comp <- _vertexPopup.getComponents } {
                 comp match {
                     case vml: VertexMenuListener[V] => vml.setVertexAndView(v, vv)
                     case _ =>
@@ -45,7 +45,7 @@ class EditingPopupMousePlugin[V, E](vertexFactory: Point2D => V) extends Abstrac
 
     private def updateEdgeMenu(edge: E, vv: VisualizationViewer[V, E], point: Point2D) {
         if (_edgePopup != null) {
-            for {comp <- _edgePopup.getComponents() } {
+            for {comp <- _edgePopup.getComponents } {
                 comp match {
                     case eml: EdgeMenuListener[E] => eml.setEdgeAndView(edge, vv)
                     case _ =>
@@ -64,7 +64,7 @@ class EditingPopupMousePlugin[V, E](vertexFactory: Point2D => V) extends Abstrac
 
     private def updateGenericMenu(vv: VisualizationViewer[V, E], point: Point2D) {
         if (_genericPopup != null) {
-            for {comp <- _genericPopup.getComponents() } {
+            for {comp <- _genericPopup.getComponents } {
                 comp match {
                     case mpl: MenuPointListener => mpl.setPoint(point)
                     case _ =>

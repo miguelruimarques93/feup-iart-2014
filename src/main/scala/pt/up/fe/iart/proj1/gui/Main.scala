@@ -53,7 +53,7 @@ object Main extends SimpleSwingApplication {
         contents = contentPane
 
         depthLimitedForm.visible = algorithmComboBox.selection.item == DepthLimited
-        shouldRunButtonBeEnabled
+        shouldRunButtonBeEnabled()
     }
 
     lazy val fileChooser = new FileChooser(new java.io.File(".").getCanonicalFile)
@@ -102,7 +102,7 @@ object Main extends SimpleSwingApplication {
             val g = PatientTransportationProblem.readGraph(file)
             val vs = g.verticesMap.map(_.swap)
             g.getShortestPaths match {
-                case (weights, prevs) =>
+                case (weights, predecessors) =>
                     val ptp = new PatientTransportationProblem(vs, weights, ambCap, gas)
                     val (result: SearchResult[List[Int]], t: Long) = time(alg match {
                         case BreadthFirst => BreadthFirstSearch(ptp)
@@ -133,7 +133,7 @@ object Main extends SimpleSwingApplication {
 
                                     var path = mutable.Buffer(v)
                                     while (u != v) {
-                                        v = prevs(u)(v).get
+                                        v = predecessors(u)(v).get
                                         path += v
                                     }
 
@@ -151,7 +151,7 @@ object Main extends SimpleSwingApplication {
                             Swing.onEDT {
                                 resultsTable.model.addRow(
                                     Array[AnyRef](
-                                        alg.toString,
+                                        alg.toString(),
                                         file,
                                         "Success",
                                         t.toString,
@@ -168,7 +168,7 @@ object Main extends SimpleSwingApplication {
 
                         case _ => Swing.onEDT(resultsTable.model.addRow(
                             Array[AnyRef](
-                                alg.toString,
+                                alg.toString(),
                                 file,
                                 result.toString,
                                 t.toString
@@ -194,7 +194,7 @@ object Main extends SimpleSwingApplication {
 
     val keyEvent = new AWTKeyAdapter {
         override def keyTyped(e: AWTKeyEvent): Unit = {
-            Swing.onEDT( shouldRunButtonBeEnabled )
+            Swing.onEDT( shouldRunButtonBeEnabled() )
         }
     }
 
@@ -243,19 +243,19 @@ object Main extends SimpleSwingApplication {
 
     reactions += {
         case TableRowsSelected(`loadedMaps`, range, adjusting) =>
-            shouldRunButtonBeEnabled
+            shouldRunButtonBeEnabled()
         case TableColumnHeaderSelected(source, columnIndex, 2) =>
             val column = source.peer.getColumnModel.getColumn(columnIndex)
 
             val header = source.peer.getTableHeader
-            val defaultHeaderRenderer = if (header != null) header.getDefaultRenderer() else null
+            val defaultHeaderRenderer = if (header != null) header.getDefaultRenderer else null
             val h = {
-                val h = column.getHeaderRenderer();
+                val h = column.getHeaderRenderer
                 if (h != null) h else defaultHeaderRenderer
             }
 
             column.setPreferredWidth((
-                h.getTableCellRendererComponent(source.peer, column.getHeaderValue(), false, false, -1, columnIndex).getPreferredSize.width +:
+                h.getTableCellRendererComponent(source.peer, column.getHeaderValue, false, false, -1, columnIndex).getPreferredSize.width +:
                     (for {row <- 0 until source.model.getRowCount} yield {
                         source.peer.getCellRenderer(row, columnIndex).getTableCellRendererComponent(source.peer, source.model.getValueAt(row, columnIndex), false, false, row, columnIndex).getPreferredSize.width
                     })).max)
@@ -264,10 +264,10 @@ object Main extends SimpleSwingApplication {
             depthLimitedForm.visible = algorithmComboBox.selection.item == DepthLimited
 
         case EditDone(`gasTankCapacity`) =>
-            shouldRunButtonBeEnabled
+            shouldRunButtonBeEnabled()
     }
 
-    def shouldRunButtonBeEnabled = {
+    def shouldRunButtonBeEnabled() = {
         runButton.enabled = !loadedMaps.selection.rows.isEmpty &&
             gasTankCapacity.text.matches("[0-9]+(.[0-9]+)?") &&
             ambulanceCapacity.text.matches("[0-9]+") &&
@@ -279,9 +279,9 @@ object Main extends SimpleSwingApplication {
         loadedMaps.model.addRow(Array[AnyRef](
             file,
             g.vertices.size.toString,
-            g.vertices.filter(problem.Location.isPatientLocation(_)).size.toString,
-            g.vertices.filter(problem.Location.isFiliation(_)).size.toString,
-            g.vertices.filter(problem.Location.isGasStation(_)).size.toString,
+            g.vertices.count(problem.Location.isPatientLocation).toString,
+            g.vertices.count(problem.Location.isFiliation).toString,
+            g.vertices.count(problem.Location.isGasStation).toString,
             g.edges.size.toString
         ))
     }

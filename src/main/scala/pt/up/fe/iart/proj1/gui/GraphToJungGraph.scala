@@ -2,7 +2,7 @@ package pt.up.fe.iart.proj1.gui
 
 import pt.up.fe.iart.proj1.collections.Graph
 
-import edu.uci.ics.jung.graph.{DirectedSparseMultigraph}
+import edu.uci.ics.jung.graph.DirectedSparseMultigraph
 
 object GraphToJungGraph {
     implicit def graphToJungGraph[V](g: Graph[V]) = {
