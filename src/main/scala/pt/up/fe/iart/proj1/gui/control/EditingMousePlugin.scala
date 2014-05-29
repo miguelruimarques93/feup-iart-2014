@@ -6,7 +6,7 @@ import swing.event._
 import java.awt
 import awt.{Color, Graphics, Cursor, Shape}
 import awt.event.InputEvent
-import awt.geom.{AffineTransform, CubicCurve2D, Point2D}
+import awt.geom.{AffineTransform, QuadCurve2D, Point2D}
 
 import edu.uci.ics.jung
 import jung.visualization.control.{AbstractGraphMousePlugin}
@@ -23,8 +23,8 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
     private def checkModifiers(e: MouseEvent): Boolean = (e.modifiers & modifiers) != 0
 
     protected val rawEdge = {
-        val r = new CubicCurve2D.Float
-        r.setCurve(0.0f, 0.0f, 0.33f, 100, .66f, -50, 1.0f, 0.0f)
+        val r = new QuadCurve2D.Float
+        r.setCurve(0.0f, 0.0f, 0.5f, 15.0f, 1.0f, 0.0f)
         r
     }
     protected val rawArrowShape = ArrowFactory.getNotchedArrow(20, 16, 8)
@@ -126,8 +126,8 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
                     if (edge != null) {
                         graph.addEdge(edge, startVertex.get, vertex, edgeType)
                     }
-                    vv.repaint()
                 }
+                vv.repaint()
             }
 
             startVertex = None

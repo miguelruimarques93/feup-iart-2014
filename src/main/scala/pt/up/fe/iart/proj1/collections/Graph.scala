@@ -15,10 +15,11 @@ class Graph[V <: Any] {
     private val _adjacencyMatrix = mutable.Map[Int, mutable.Map[Int, Double]]() withDefaultValue mutable.Map.empty
 
     def vertices = _vertices.keySet
+
     def verticesMap = _vertices.toMap
 
     def addVertex(value: V) = {
-        if (! _vertices.contains(value)) {
+        if (!_vertices.contains(value)) {
             _lastVertex += 1
             _vertices.put(value, _lastVertex)
             _adjacencyMatrix.put(_lastVertex, mutable.Map())
@@ -30,7 +31,7 @@ class Graph[V <: Any] {
             val index = _vertices(value)
             _vertices.remove(value)
             _adjacencyMatrix.remove(index)
-            for { (_, edges) <- _adjacencyMatrix } edges.remove(index)
+            for {(_, edges) <- _adjacencyMatrix} edges.remove(index)
         }
     }
 
@@ -44,41 +45,44 @@ class Graph[V <: Any] {
     }
 
     case class Edge(from: V, to: V, weight: Double)
+
     def edges: List[Edge] = {
-        val invertVertices = _vertices.map{_.swap}
-        for { (from, row) <- _adjacencyMatrix
-              (to, weight) <- row } yield Edge(invertVertices(from), invertVertices(to), weight)
+        val invertVertices = _vertices.map {
+            _.swap
+        }
+        for {(from, row) <- _adjacencyMatrix
+             (to, weight) <- row} yield Edge(invertVertices(from), invertVertices(to), weight)
     }.toList
 
     override def toString = s"${_vertices.keys.mkString("\n")}\n${edges.mkString("\n")}"
 
-    def weightMatrix : Array[Array[Option[Double]]] = {
+    def weightMatrix: Array[Array[Option[Double]]] = {
         val result = Array.fill[Option[Double]](_lastVertex + 1, _lastVertex + 1)(None)
 
-        for { i <- 0 to _lastVertex } result(i)(i) = Some(0.0)
+        for {i <- 0 to _lastVertex} result(i)(i) = Some(0.0)
 
-        for { (src, edges) <- _adjacencyMatrix
-              (destination, weight) <- edges }
+        for {(src, edges) <- _adjacencyMatrix
+             (destination, weight) <- edges}
             result(src)(destination) = Some(weight)
         result
     }
 
-    def predecessorMatrix : Array[Array[Option[Int]]] = {
+    def predecessorMatrix: Array[Array[Option[Int]]] = {
         val result = Array.fill[Option[Int]](_lastVertex + 1, _lastVertex + 1)(None)
-        for { (src, edges) <- _adjacencyMatrix
-              (destination, _) <- edges }
+        for {(src, edges) <- _adjacencyMatrix
+             (destination, _) <- edges}
             result(src)(destination) = Some(src)
         result
     }
 
     import scala.language.implicitConversions
 
-    implicit def optionToDouble(weight:Option[Double]) = weight match{
+    implicit def optionToDouble(weight: Option[Double]) = weight match {
         case Some(x) => x
         case _ => Double.MaxValue
     }
 
-    implicit def doubleToOption(weight:Double) = Some(weight)
+    implicit def doubleToOption(weight: Double) = Some(weight)
 
     def getShortestPaths: (Array[Array[Option[Double]]], Array[Array[Option[Int]]]) = {
         val W = weightMatrix
@@ -89,7 +93,7 @@ class Graph[V <: Any] {
              i <- 0 until n
              j <- 0 until n
              newWeight = W(i)(k) + W(k)(j)
-             if W(i)(j) > newWeight } {
+             if W(i)(j) > newWeight} {
             W(i)(j) = newWeight
             P(i)(j) = P(k)(j)
         }
@@ -98,42 +102,78 @@ class Graph[V <: Any] {
     }
 }
 
-object Main {
-    def time[A](label: String)(block: => A): A = {
-        val now = System.currentTimeMillis()
-        val ret = block
-        println(label + ": " + (System.currentTimeMillis() - now) + " ms.")
-        ret
-    }
-
-    def main (args: Array[String]) {
-        if (args.length < 1) {
-            Console.err.println("Not enough arguments.")
-            sys.exit(1)
-        }
-
-        val inputFile = args(0)
-
-        val is = new FileInputStream(inputFile)
-        val input = new ANTLRInputStream(is)
-        val lexer = new PTPLexer(input)
-        val tokens = new CommonTokenStream(lexer)
-        val parser = new PTPParser(tokens)
-        val tree = parser.map()
-
-        val visitor = new GraphVisitor()
-        val g = visitor.visit(tree)
-
-        val vs = g.verticesMap.map(_.swap)
-        println(vs)
-        g.getShortestPaths match {
-            case (weights, _) =>
-                val ptp = new PatientTransportationProblem(vs, weights, 100, 100.0)
-                val sr = time("AStarSearch")(AStarSearch(ptp))
-                sr match {
-                    case Success(path) => println(path.map(vs).mkString(", "))
-                    case _ => println(sr)
-                }
-        }
-    }
-}
+//object Main {
+//    def time[A](label: String)(block: => A): A = {
+//        val now = System.currentTimeMillis()
+//        val ret = block
+//        println(label + ": " + (System.currentTimeMillis() - now) + " ms.")
+//        ret
+//    }
+//
+//    def main(args: Array[String]) {
+//        if (args.length < 1) {
+//            Console.err.println("Not enough arguments.")
+//            sys.exit(1)
+//        }
+//
+//        val inputFile = args(0)
+//
+//        val is = new FileInputStream(inputFile)
+//        val input = new ANTLRInputStream(is)
+//        val lexer = new PTPLexer(input)
+//        val tokens = new CommonTokenStream(lexer)
+//        val parser = new PTPParser(tokens)
+//        val tree = parser.map()
+//
+//        val visitor = new GraphVisitor()
+//        val g = visitor.visit(tree)
+//
+//        val vs = g.verticesMap.map(_.swap)
+//        println(vs)
+//        g.getShortestPaths match {
+//            case (weights, prevs) =>
+//                val ptp = new PatientTransportationProblem(vs, weights, 100, 2500.0)
+//                val sr = time("AStarSearch")(DepthFirstSearch(ptp))
+//
+//                sr match {
+//                    case Success(path) =>
+//                        val initial = ptp.initialState
+//                        val states = path.foldLeft(List(initial))((acc, action) => ptp.result(acc.head, action) :: acc).reverse
+//                        val totalCost = ((states, path).zipped.map{
+//                            case (st, ac) =>
+//                                val finalSt = ptp.result(st, ac)
+//                                ptp.stepCost(st, ac,finalSt)
+//                        }).sum
+//
+//                        val statesComplete = (states, states.tail).zipped.flatMap({
+//                            case (i, f) =>
+//                                val u = i.currentLocation
+//                                var v = f.currentLocation
+//
+//                                var path = mutable.Buffer(v)
+//                                while (u != v) {
+//                                    v = prevs(u)(v).get
+//                                    path += v
+//                                }
+//
+//                                val res = path.tail.reverse.map((_, i.patientsAmbulance, i.gasLevel)).to[List]
+//
+//                                res.head :: (res, res.tail).zipped.map {
+//                                    case ((iLoc, _, _), (fLoc, fPatientsAmbulance, fGas)) =>
+//                                        (fLoc, fPatientsAmbulance, fGas - weights(iLoc)(fLoc).get)
+//                                }
+//                        }) :+ {
+//                            val st = states.last
+//                            (st.currentLocation, st.patientsAmbulance, st.gasLevel)
+//                        }
+//
+//                        println(totalCost)
+//                        // println
+//                        // println(statesComplete.mkString("\n"))
+//
+//
+//                    case _ => println(sr)
+//                }
+//        }
+//    }
+//}

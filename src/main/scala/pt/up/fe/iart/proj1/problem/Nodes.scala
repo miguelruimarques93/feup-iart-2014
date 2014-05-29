@@ -4,12 +4,12 @@ sealed trait Patient {
     def destination: Option[Location] = None
 }
 
-case class PatientWithDestination(dest: Filiation) extends Patient {
+case class PatientWithDestination(index: Int, dest: Filiation) extends Patient {
     override def destination: Option[Location] = Some(dest)
     override def toString = s"Patient($dest)"
 }
 
-case class PatientWithoutDestination() extends Patient {
+case class PatientWithoutDestination(index: Int) extends Patient {
     override def toString = "Patient()"
 }
 
@@ -34,6 +34,11 @@ case class PatientLocation(override var position : Position, patient: Patient) e
 case class Filiation(override var position : Position, hasGarage: Boolean) extends Location(position)
 
 object Location {
+    def hasGarage(location: Location): Boolean = location match {
+        case Filiation(_, true) => true
+        case _ => false
+    }
+
     type Position = (Double, Double)
 
     def patient(location: Location) = location match {

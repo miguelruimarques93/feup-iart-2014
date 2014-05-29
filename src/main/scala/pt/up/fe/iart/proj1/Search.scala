@@ -6,37 +6,35 @@ import scala.collection.mutable
 import scala.collection.immutable
 
 /* Possible search results that various search algorithms can return */
-sealed abstract class SearchResult[A]
+sealed abstract class SearchResult[+A]
 
-case class Success[A](result: A) extends SearchResult[A]
+case class Success[A](result: A, numberExpanded: Int) extends SearchResult[A]
 
-case class Failure[A]() extends SearchResult[A]
+case object Failure extends SearchResult[Nothing]
 
-case class CutOff[A]() extends SearchResult[A]
+case object CutOff extends SearchResult[Nothing]
 
 object GraphSearch {
     def apply[S, A](problem: Problem[S, A], frontier: QueueLike[Node[S, A]]) = {
         @tailrec
-        def loop(frontier: QueueLike[Node[S, A]], explored: immutable.HashSet[S]): SearchResult[List[A]] = {
+        def loop(frontier: QueueLike[Node[S, A]], explored: immutable.HashSet[S], numberExpanded: Int): SearchResult[List[A]] = {
             val n = frontier.removeFirst()
-            // println(n)
             n match {
-                case None => Failure()
+                case None => Failure
                 case Some(node) if problem.goalTest(node.state) =>
-                    Success(node.solution)
+                    Success(node.solution, numberExpanded + 1)
                 case Some(node) =>
                     if (explored.exists(_ == node.state))
-                        loop(frontier, explored)
+                        loop(frontier, explored, numberExpanded)
                     else {
                         val acts = problem.actions(node.state)
-                        // println(acts)
                         acts.foreach((a: A) => frontier.insert(Node.childNode(problem, node, a)))
-                        loop(frontier, explored + node.state)
+                        loop(frontier, explored + node.state, numberExpanded + 1)
                     }
             }
         }
 
-        loop(frontier.insert(Node(problem.initialState)), scala.collection.immutable.HashSet.empty)
+        loop(frontier.insert(Node(problem.initialState)), scala.collection.immutable.HashSet.empty, 0)
     }
 }
 
@@ -44,23 +42,27 @@ object AStarSearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
         GraphSearch(problem, new  mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](AStarHeuristic(_, problem)).reverse))
 
-    private def AStarHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]): Double =
-        node.pathCost + problem.estimatedCostToGoal(node.state) //f(n) = g(n) + h(n)
+    private def AStarHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]): Double = {
+        val g = node.pathCost
+        val h = problem.estimatedCostToGoal(node.state)
+
+        g + h //f(n) = g(n) + h(n)
+    }
 }
 
-object BestFirstSearch {
+object GreedySearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
-        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](BestFirstHeuristic(_, problem)).reverse))
+        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](GreedySearchHeuristic(_, problem)).reverse))
 
-    private def BestFirstHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
+    private def GreedySearchHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
         problem.estimatedCostToGoal(node.state) //f(n) = h(n)
 }
 
-object BranchAndBoundSearch {
+object UniformCostSearch {
     def apply[S, A](problem: Problem[S, A]): SearchResult[List[A]] =
-        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](BranchAndBoundHeuristic(_, problem)).reverse))
+        GraphSearch(problem, new mutable.PriorityQueue[Node[S, A]]()(Ordering.by[Node[S, A], Double](UniformCostHeuristic(_, problem)).reverse))
 
-    private def BranchAndBoundHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
+    private def UniformCostHeuristic[S, A](node: Node[S, A], problem: Problem[S, A]) =
         node.pathCost //f(n) = g(n)
 }
 
@@ -76,22 +78,22 @@ object DepthFirstSearch {
 
 object DepthLimitedSearch {
     def apply[S, A](problem: Problem[S, A], limit: Int) =
-        recursiveDLS(Node[S, A](problem.initialState), problem, limit)
+        recursiveDLS(Node[S, A](problem.initialState), problem, limit, 0)
 
-    private def recursiveDLS[S, A](node: Node[S, A], problem: Problem[S, A], limit: Int): SearchResult[List[A]] = {
+    private def recursiveDLS[S, A](node: Node[S, A], problem: Problem[S, A], limit: Int, numberExpanded: Int): SearchResult[List[A]] = {
         if (problem.goalTest(node.state))
-            Success(node.solution)
+            Success(node.solution, numberExpanded + 1)
         else if (node.depth == limit)
-            CutOff()
+            CutOff
         else {
             def loop(nodes: List[Node[S, A]], cutoffOccured: Boolean): SearchResult[List[A]] =
                 nodes match {
-                    case Nil if cutoffOccured => CutOff()
-                    case Nil => Failure()
+                    case Nil if cutoffOccured => CutOff
+                    case Nil => Failure
                     case n :: rest =>
-                        recursiveDLS(n, problem, limit) match {
-                            case Failure() => loop(rest, cutoffOccured)
-                            case CutOff() => loop(rest, cutoffOccured = true)
+                        recursiveDLS(n, problem, limit, numberExpanded + 1) match {
+                            case Failure => loop(rest, cutoffOccured)
+                            case CutOff => loop(rest, cutoffOccured = true)
                             case ret => ret
                         }
                 }
@@ -104,7 +106,7 @@ object IterativeDeepeningSearch {
     def apply[S, A](problem: Problem[S, A]) = {
         def loop(depth: Int): SearchResult[List[A]] =
             DepthLimitedSearch(problem, depth) match {
-                case CutOff() => loop(depth + 1)
+                case CutOff => loop(depth + 1)
                 case res => res
             }
         loop(0)

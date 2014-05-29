@@ -1,13 +1,13 @@
 package pt.up.fe.iart.proj1
 
-abstract class Problem[S, A] {
-    def initialState: S
-    def goalTest(s: S): Boolean
+abstract class Problem[State, Action] {
+    def initialState: State
+    def goalTest(s: State): Boolean
 
-    def actions(s: S): List[A]
-    def result(s: S,a: A): S
+    def actions(s: State): List[Action]
+    def result(s: State,a: Action): State
 
-    def stepCost(from: S, action: A, to: S): Double
+    def stepCost(from: State, action: Action, to: State): Double
 
-    def estimatedCostToGoal(from: S): Double
+    def estimatedCostToGoal(from: State): Double
 }

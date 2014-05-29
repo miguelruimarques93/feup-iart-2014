@@ -6,22 +6,24 @@ import pt.up.fe.iart.proj1.parser.PTPParser._
 import pt.up.fe.iart.proj1.problem.PatientLocation
 import pt.up.fe.iart.proj1.problem.GenericLocation
 
-import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
-
-import java.io.FileInputStream
-
 class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
 
-    private object patientVisitor extends PTPBaseVisitor[Patient] {
+    private class PatientVisitor extends PTPBaseVisitor[Patient] {
+        private var lastIndex = -1
+
         override def visitPatient(ctx: PatientContext): Patient =
-            if (ctx.filiation() == null)
-                PatientWithoutDestination()
-            else
-                PatientWithDestination(locationVisitor.visit(ctx.filiation()) match {
+            if (ctx.filiation() == null) {
+                lastIndex = lastIndex + 1
+                PatientWithoutDestination(lastIndex)
+            } else {
+                lastIndex = lastIndex + 1
+                PatientWithDestination(lastIndex, locationVisitor.visit(ctx.filiation()) match {
                     case f: Filiation => f;
                     case _ => throw new Error("Patient can only go to Filiation")
                 })
+            }
     }
+    private val patientVisitor = new PatientVisitor()
 
     private object locationVisitor extends PTPBaseVisitor[Location] {
         override def visitGenericLocation(ctx: GenericLocationContext): Location = GenericLocation(positionVisitor.visit(ctx.position()))
@@ -58,8 +60,12 @@ class GraphVisitor extends PTPBaseVisitor[Graph[Location]] {
 
     override def visitEdge(ctx: EdgeContext): Graph[Location] = {
         val edgeCtx = ctx.edge_stmt()
-        val from = locationVisitor.visit(edgeCtx.from)
-        val to = locationVisitor.visit(edgeCtx.to)
+        val tFrom = locationVisitor.visit(edgeCtx.from)
+        val tTo = locationVisitor.visit(edgeCtx.to)
+
+        val from = _graph.vertices.find(_.position == tFrom.position).get
+        val to = _graph.vertices.find(_.position == tTo.position).get
+
         val weight = edgeCtx.weight.getText.toDouble
         _graph.addEdge(from, to, weight)
         _graph

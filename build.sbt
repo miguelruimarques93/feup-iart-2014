@@ -12,6 +12,8 @@ libraryDependencies += "org.scala-lang" % "scala-swing" % "2.10.4"
 
 libraryDependencies += "com.intellij" % "forms_rt" % "7.0.3"
 
+libraryDependencies += "com.github.wookietreiber" %% "scala-chart" % "0.4.0"
+
 antlr4Settings
 
 antlr4GenVisitor in Antlr4 := true

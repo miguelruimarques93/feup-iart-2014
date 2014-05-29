@@ -5,12 +5,9 @@ import scala.swing._
 import edu.uci.ics.jung
 import jung.visualization.renderers.Renderer.VertexLabel.Position
 import edu.uci.ics.jung.visualization.{RenderContext, VisualizationViewer}
-import edu.uci.ics.jung.algorithms.layout.StaticLayout
 import jung.graph.DirectedSparseGraph
 
 import java.awt.{BasicStroke, Color}
-
-import org.apache.commons.collections15.{Transformer, Factory}
 import java.awt.geom.Point2D
 import pt.up.fe.iart.proj1.gui.control._
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse
@@ -30,8 +27,10 @@ import pt.up.fe.iart.proj1.gui.event.EdgeRemovedEvent
 import scala.swing.event.UIElementResized
 import pt.up.fe.iart.proj1.gui.event.VertexPropertyChanged
 import pt.up.fe.iart.proj1.gui.control.VertexMoveEvent
+import pt.up.fe.iart.proj1.gui.Conversions._
+import pt.up.fe.iart.proj1.problem.PatientTransportationProblem
 
-object Main2 extends SwingApplication {
+object Editor extends SwingApplication {
 
     object Mode {
         type Mode = ModalGraphMouse.Mode
@@ -48,8 +47,10 @@ object Main2 extends SwingApplication {
 
     import Mode.Mode
 
-    val graphModes = Array(/*Mode.Move,*/ Mode.Transform, Mode.Edit)
-    val patientGraphModes = Array(/*Mode.Move,*/ Mode.Edit)
+    lazy val fileChooser = new FileChooser()
+
+    val graphModes = Array(Mode.Transform, Mode.Edit)
+    val patientGraphModes = Array(Mode.Edit)
 
     val graphModeComboBox = new ComboBox[Mode](graphModes) {
         renderer = Renderer(Mode.names)
@@ -58,14 +59,6 @@ object Main2 extends SwingApplication {
     val patientGraphModeComboBox = new ComboBox[Mode](patientGraphModes) {
         renderer = Renderer(Mode.names)
         maximumSize = new Dimension(maximumSize.width, minimumSize.height)
-    }
-
-    implicit def FunctionToTransformer[T1, T2](fun: T1 => T2) = new Transformer[T1, T2] {
-        override def transform(p1: T1): T2 = fun(p1)
-    }
-
-    implicit def FunctionToFactory[T](fun: () => T) = new Factory[T] {
-        override def create(): T = fun()
     }
 
     val vertexMap: mutable.Map[Int, Location] = mutable.Map()
@@ -79,15 +72,6 @@ object Main2 extends SwingApplication {
         for {edge <- edgesMap.keys; (from, to) = edge} graph.addEdge(edge, from, to)
 
         graph
-    }
-
-    private class StaticLayoutExtended[V, E](g: edu.uci.ics.jung.graph.Graph[V, E], s: Dimension) extends StaticLayout[V, E](g, s) {
-        override def setSize(size: Dimension): Unit = {
-            if (size != null && graph != null) {
-                this.size = size
-                initialize()
-            }
-        }
     }
 
     private val margin = (50.0, 50.0)
@@ -105,13 +89,19 @@ object Main2 extends SwingApplication {
     }
 
     def createEdge(from: Int, to: Int) = {
-        edgesMap.put((from, to), 0.0)
-        println(s"Edges: $edgesMap")
-        (from, to)
+        if (from != to) {
+            val dist = (vertexMap(from).position, vertexMap(to).position) match {
+                case ((x1, y1), (x2, y2)) => math.round(math.sqrt((y2 - y1) * (y2 - y1) + (x2 - x1) * (x2 - x1)) * 100.0) / 100.0
+            }
+
+            edgesMap.put((from, to), dist)
+            println(s"Edges: $edgesMap")
+            (from, to)
+        } else null
     }
 
     lazy val graphVV = {
-        val size = new Dimension(800, 600)
+        val size: Dimension = (800, 600)
         val layout = new StaticLayoutExtended(graph, size)
 
         layout.setInitializer(initializer _)
@@ -189,7 +179,7 @@ object Main2 extends SwingApplication {
                     }
                 }
 
-            case ev : EdgeRemovedEvent[(Int, Int) @unchecked] =>
+            case ev: EdgeRemovedEvent[(Int, Int)@unchecked] =>
                 if (selectedPage == Page.Graph) {
                     edgesMap.remove(ev.edge)
                 }
@@ -322,7 +312,7 @@ object Main2 extends SwingApplication {
                     }
                 }
 
-            case ev: EdgeRemovedEvent[(Int, Int) @unchecked] =>
+            case ev: EdgeRemovedEvent[(Int, Int)@unchecked] =>
                 if (selectedPage == Page.PatientGraph) {
                     val edge = ev.edge
                     val fromVer = vertexMap(edge._1)
@@ -372,80 +362,71 @@ object Main2 extends SwingApplication {
         }
         menuBar = new MenuBar {
             contents += new Menu("File") {
-                contents += new MenuItem("Open") {
-                    action = Action("Open") {
-                        val fc = new FileChooser()
+                contents += new MenuItem(Action("Open") {
+                    import FileChooser.Result._
 
-                        import FileChooser.Result._
+                    fileChooser.showOpenDialog(tabs) match {
+                        case Approve =>
+                            loadFile(fileChooser.selectedFile.getAbsolutePath)
 
-                        fc.showOpenDialog(tabs) match {
-                            case Approve =>
-                                loadFile(fc.selectedFile.getAbsolutePath)
+                            val oldSize = graphVV.getSize
+                            graphVV.getGraphLayout.setGraph(graph)
+                            graphVV.getGraphLayout.setInitializer(initializer _)
+                            graphVV.getGraphLayout.setSize(oldSize)
 
-                                val oldSize = graphVV.getSize
-                                graphVV.getGraphLayout.setGraph(graph)
-                                graphVV.getGraphLayout.setInitializer(initializer _)
-                                graphVV.getGraphLayout.setSize(oldSize)
+                            val oldSize1 = patientGraphVV.getSize
+                            patientGraphVV.getGraphLayout.setGraph(patientGraph)
+                            patientGraphVV.getGraphLayout.setInitializer(initializer _)
+                            patientGraphVV.getGraphLayout.setSize(oldSize1)
 
-                                val oldSize1 = patientGraphVV.getSize
-                                patientGraphVV.getGraphLayout.setGraph(patientGraph)
-                                patientGraphVV.getGraphLayout.setInitializer(initializer _)
-                                patientGraphVV.getGraphLayout.setSize(oldSize1)
+                            graphVV.repaint()
+                            patientGraphVV.repaint()
 
-                                graphVV.repaint()
-                                patientGraphVV.repaint()
-
-                            case Cancel =>
-                            case Error => println("Error")
-
-                        }
+                        case Cancel =>
+                        case Error => println("Error")
 
                     }
-                }
-                contents += new MenuItem("Save") {
-                    action = Action("Save") {
-                        val fc = new FileChooser()
-
-                        import FileChooser.Result._
-
-                        fc.showSaveDialog(tabs) match {
-                            case Approve =>
-                                val g = new Graph[problem.Location]
-
-                                val tempLocs = for {(index, loc) <- vertexMap} yield index -> {
-                                    loc match {
-                                        case gl @ GenericLocation(_) => problem.GenericLocation(gl.position)
-                                        case gs @ GasStation(_) => problem.GasStation(gs.position)
-                                        case Filiation(position, hasGarage) => problem.Filiation(position, hasGarage)
-                                        case PatientLocation(position, patient) if patient.hasDestination =>
-                                            problem.PatientLocation(
-                                                position,
-                                                problem.PatientWithDestination(patient.destination.map(dest => problem.Filiation(vertexMap(dest).position, vertexMap(dest).asInstanceOf[Filiation].hasGarage)).get))
-                                        case PatientLocation(position, patient) =>
-                                            problem.PatientLocation(
-                                                position,
-                                                problem.PatientWithoutDestination())
-                                    }
-                                }
-
-                                println(tempLocs)
-
-                                val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocs(from), tempLocs(to)) -> weight
-
-                                for {(_, loc) <- tempLocs} g.addVertex(loc)
-
-                                for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
-
-                                Some(new PrintWriter(fc.selectedFile)).foreach { p => p.write(g.toString); p.close()}
-
-                            case Cancel =>
-                            case Error => println("Error")
-
-                        }
-
-                    }
-                }
+                })
             }
+            contents += new MenuItem(Action("Save") {
+                import FileChooser.Result._
+
+                fileChooser.showSaveDialog(tabs) match {
+                    case Approve =>
+                        val g = new Graph[problem.Location]
+
+                        val tempLocs = for {(index, loc) <- vertexMap} yield index -> {
+                            loc match {
+                                case gl@GenericLocation(_) => problem.GenericLocation(gl.position)
+                                case gs@GasStation(_) => problem.GasStation(gs.position)
+                                case Filiation(position, hasGarage) => problem.Filiation(position, hasGarage)
+                                case PatientLocation(position, patient) if patient.hasDestination =>
+                                    problem.PatientLocation(
+                                        position,
+                                        problem.PatientWithDestination(0, patient.destination.map(dest => problem.Filiation(vertexMap(dest).position, vertexMap(dest).asInstanceOf[Filiation].hasGarage)).get))
+                                case PatientLocation(position, patient) =>
+                                    problem.PatientLocation(
+                                        position,
+                                        problem.PatientWithoutDestination(0))
+                            }
+                        }
+
+                        println(tempLocs)
+
+                        val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocs(from), tempLocs(to)) -> weight
+
+                        for {(_, loc) <- tempLocs} g.addVertex(loc)
+
+                        for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
+
+                        Some(new PrintWriter(fileChooser.selectedFile)).foreach { p => p.write(g.toString); p.close()}
+
+                    case Cancel =>
+                    case Error => println("Error")
+
+                }
+
+            })
         }
 
         listenTo(tabs.selection, mainFrame)
@@ -485,25 +466,11 @@ object Main2 extends SwingApplication {
         mainFrame
     }
 
-    def readGraph(fileName: String): Graph[problem.Location] = {
-        val inputFile = fileName
-
-        val is = new FileInputStream(inputFile)
-        val input = new ANTLRInputStream(is)
-        val lexer = new PTPLexer(input)
-        val tokens = new CommonTokenStream(lexer)
-        val parser = new PTPParser(tokens)
-        val tree = parser.map()
-
-        val visitor = new GraphVisitor()
-        visitor.visit(tree)
-    }
-
     def loadFile(file: String) = {
         vertexMap.clear()
         edgesMap.clear()
 
-        val g = readGraph(file)
+        val g = PatientTransportationProblem.readGraph(file)
 
         val verticesMap = g.verticesMap
         val (tempVertexMap, tempEdges) = (verticesMap.map(_.swap), g.edges)
@@ -513,8 +480,8 @@ object Main2 extends SwingApplication {
         } yield {
             index -> {
                 (loc: @unchecked) match {
-                    case gl @ problem.GenericLocation(_) => GenericLocation(gl.position)
-                    case gs @ problem.GasStation(_) => GasStation(gs.position)
+                    case gl@problem.GenericLocation(_) => GenericLocation(gl.position)
+                    case gs@problem.GasStation(_) => GasStation(gs.position)
                     case problem.Filiation(pos, hasGarage) => Filiation(pos, hasGarage)
                 }
             }
