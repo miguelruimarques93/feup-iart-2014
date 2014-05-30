@@ -21,3 +21,5 @@ antlr4GenVisitor in Antlr4 := true
 antlr4GenListener in Antlr4 := false
 
 antlr4PackageName in Antlr4 := Some("pt.up.fe.iart.proj1.parser")
+
+scalacOptions in (Compile,doc) := Seq("-groups", "-implicits", "-diagrams")
