@@ -387,46 +387,47 @@ object Editor extends SwingApplication {
 
                     }
                 })
-            }
-            contents += new MenuItem(Action("Save") {
-                import FileChooser.Result._
 
-                fileChooser.showSaveDialog(tabs) match {
-                    case Approve =>
-                        val g = new Graph[problem.Location]
+                contents += new MenuItem(Action("Save") {
+                    import FileChooser.Result._
 
-                        val tempLocations = for {(index, loc) <- vertexMap} yield index -> {
-                            loc match {
-                                case gl@GenericLocation(_) => problem.GenericLocation(gl.position)
-                                case gs@GasStation(_) => problem.GasStation(gs.position)
-                                case Filiation(position, hasGarage) => problem.Filiation(position, hasGarage)
-                                case PatientLocation(position, patient) if patient.hasDestination =>
-                                    problem.PatientLocation(
-                                        position,
-                                        problem.PatientWithDestination(0, patient.destination.map(dest => problem.Filiation(vertexMap(dest).position, vertexMap(dest).asInstanceOf[Filiation].hasGarage)).get))
-                                case PatientLocation(position, patient) =>
-                                    problem.PatientLocation(
-                                        position,
-                                        problem.PatientWithoutDestination(0))
+                    fileChooser.showSaveDialog(tabs) match {
+                        case Approve =>
+                            val g = new Graph[problem.Location]
+
+                            val tempLocations = for {(index, loc) <- vertexMap} yield index -> {
+                                loc match {
+                                    case gl@GenericLocation(_) => problem.GenericLocation(gl.position)
+                                    case gs@GasStation(_) => problem.GasStation(gs.position)
+                                    case Filiation(position, hasGarage) => problem.Filiation(position, hasGarage)
+                                    case PatientLocation(position, patient) if patient.hasDestination =>
+                                        problem.PatientLocation(
+                                            position,
+                                            problem.PatientWithDestination(0, patient.destination.map(dest => problem.Filiation(vertexMap(dest).position, vertexMap(dest).asInstanceOf[Filiation].hasGarage)).get))
+                                    case PatientLocation(position, patient) =>
+                                        problem.PatientLocation(
+                                            position,
+                                            problem.PatientWithoutDestination(0))
+                                }
                             }
-                        }
 
-                        println(tempLocations)
+                            println(tempLocations)
 
-                        val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocations(from), tempLocations(to)) -> weight
+                            val tempEdges = for {((from, to), weight) <- edgesMap} yield (tempLocations(from), tempLocations(to)) -> weight
 
-                        for {(_, loc) <- tempLocations} g.addVertex(loc)
+                            for {(_, loc) <- tempLocations} g.addVertex(loc)
 
-                        for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
+                            for {((from, to), weight) <- tempEdges} g.addEdge(from, to, weight)
 
-                        Some(new PrintWriter(fileChooser.selectedFile)).foreach { p => p.write(g.toString); p.close()}
+                            Some(new PrintWriter(fileChooser.selectedFile)).foreach { p => p.write(g.toString); p.close()}
 
-                    case Cancel =>
-                    case Error => println("Error")
+                        case Cancel =>
+                        case Error => println("Error")
 
-                }
+                    }
 
-            })
+                })
+            }
         }
 
         listenTo(tabs.selection, mainFrame)
