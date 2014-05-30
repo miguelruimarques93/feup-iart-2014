@@ -22,7 +22,9 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
 {
     import ModalGraphMouse.Mode
 
-    protected var editingPlugin : EditingMousePlugin[V, E] = null
+    protected var _editingPlugin : EditingMousePlugin[V, E] = null
+
+    def editingPlugin = _editingPlugin
     protected var labelEditingPlugin : LabelEditingGraphMousePlugin[V, E] = null
     protected var _popupEditingPlugin : EditingPopupMousePlugin[V, E] = null
 
@@ -37,7 +39,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         scalingPlugin = new ScalingGraphMousePlugin(new CrossoverScalingControl(), 0, in, out)
         rotatingPlugin = new RotatingGraphMousePlugin()
         shearingPlugin = new ShearingGraphMousePlugin()
-        editingPlugin = new EditingMousePlugin[V, E](vertexFactory, edgeFactory)
+        _editingPlugin = new EditingMousePlugin[V, E](vertexFactory, edgeFactory)
         labelEditingPlugin = new LabelEditingGraphMousePlugin[V, E]()
         _popupEditingPlugin = new EditingPopupMousePlugin[V, E](vertexFactory)
         add(scalingPlugin)
@@ -63,7 +65,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(translatingPlugin)
         remove(rotatingPlugin)
         remove(shearingPlugin)
-        remove(editingPlugin)
+        remove(_editingPlugin)
         add(pickingPlugin)
         add(animatedPickingPlugin)
         add(labelEditingPlugin)
@@ -73,7 +75,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
     override protected def setTransformingMode() : Unit = {
         remove(pickingPlugin)
         remove(animatedPickingPlugin)
-        remove(editingPlugin)
+        remove(_editingPlugin)
         add(translatingPlugin)
         add(rotatingPlugin)
         add(shearingPlugin)
@@ -88,7 +90,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(rotatingPlugin)
         remove(shearingPlugin)
         remove(labelEditingPlugin)
-        add(editingPlugin)
+        add(_editingPlugin)
         add(_popupEditingPlugin)
     }
 
@@ -99,7 +101,7 @@ class EditingModalGraphMouse[V, E](rc: RenderContext[V, E], vertexFactory: (Poin
         remove(rotatingPlugin)
         remove(shearingPlugin)
         remove(labelEditingPlugin)
-        remove(editingPlugin)
+        remove(_editingPlugin)
         remove(_popupEditingPlugin)
     }
 

@@ -14,6 +14,7 @@ import jung.visualization.{VisualizationServer, VisualizationViewer}
 import jung.graph.util.EdgeType
 import jung.visualization.util.ArrowFactory
 import jung.visualization.VisualizationServer.Paintable
+import java.awt.event.MouseEvent.{BUTTON1 => AWTBUTTON1 }
 
 
 class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V) => E, modifiers: Int = InputEvent.BUTTON1_DOWN_MASK) extends AbstractGraphMousePlugin (modifiers)
@@ -21,6 +22,11 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
     with MouseMotionPublisher
 {
     private def checkModifiers(e: MouseEvent): Boolean = (e.modifiers & modifiers) != 0
+
+    private var _createVertexOnClick = true
+
+    def createVertexOnClick = _createVertexOnClick
+    def createVertexOnClick_= (value: Boolean) = _createVertexOnClick = value
 
     protected val rawEdge = {
         val r = new QuadCurve2D.Float
@@ -116,6 +122,8 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
             val vv = e.source.peer.asInstanceOf[VisualizationViewer[V, E]]
             val p = e.point
 
+
+
             val layout = vv.getModel.getGraphLayout
             val pickSupport = vv.getPickSupport
             if (pickSupport != null) {
@@ -126,8 +134,8 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
                     if (edge != null) {
                         graph.addEdge(edge, startVertex.get, vertex, edgeType)
                     }
-                } else { //create new vertex
-                val newVertex = vertexFactory(p)
+                } else if (e.peer.getButton == AWTBUTTON1 && _createVertexOnClick) { //create new vertex
+                    val newVertex = vertexFactory(p)
                     val layout = vv.getModel.getGraphLayout
                     layout.getGraph.addVertex(newVertex)
                     layout.setLocation(newVertex, vv.getRenderContext.getMultiLayerTransformer.inverseTransform(p))

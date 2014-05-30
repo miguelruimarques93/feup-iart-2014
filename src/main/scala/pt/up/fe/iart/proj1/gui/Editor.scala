@@ -285,6 +285,8 @@ object Editor extends SwingApplication {
         gm.setMode(ModalGraphMouse.Mode.EDITING)
         patientGraphModeComboBox.selection.item = ModalGraphMouse.Mode.EDITING
 
+        gm.editingPlugin.createVertexOnClick = false
+
         gm.lockMode()
 
         val popupPlugin = gm.popupEditingPlugin
