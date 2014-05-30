@@ -3,23 +3,25 @@ package pt.up.fe.iart.proj1.gui
 import scala.swing._
 import scala.swing.event._
 
-import javax.swing.{JTextField, Box}
+import javax.swing.Box
 
 import pt.up.fe.iart.proj1
 import proj1.gui.Conversions._
 import java.awt.event.{MouseEvent => AWTMouseEvent, KeyAdapter => AWTKeyAdapter, MouseAdapter, KeyEvent => AWTKeyEvent}
 
 import javax.swing.table.DefaultTableModel
-
-import scala.collection.JavaConversions._
 import scala.swing.Table.{IntervalMode, ElementMode, AutoResizeMode}
 import pt.up.fe.iart.proj1._
 import pt.up.fe.iart.proj1.problem.{Patient, PatientTransportationProblem}
 import scala.io.Position
 import scala.collection.mutable
 import scala.swing.event.SelectionChanged
-import pt.up.fe.iart.proj1.Success
 import pt.up.fe.iart.proj1.problem
+import scala.swing.event.TableRowsSelected
+import pt.up.fe.iart.proj1.solver._
+import scala.swing.event.EditDone
+import scala.swing.event.SelectionChanged
+import pt.up.fe.iart.proj1.solver.Success
 import scala.swing.event.TableRowsSelected
 
 case class TableColumnHeaderSelected(override val source: Table, column: Int, clickCount: Int = 1) extends TableEvent(source)

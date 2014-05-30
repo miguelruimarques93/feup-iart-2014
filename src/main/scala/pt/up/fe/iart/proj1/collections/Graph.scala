@@ -7,7 +7,7 @@ import java.io.FileInputStream
 import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
 import pt.up.fe.iart.proj1.parser.{GraphVisitor, PTPParser, PTPLexer}
 import scala.Some
-import pt.up.fe.iart.proj1.Success
+import pt.up.fe.iart.proj1.solver.Success
 
 class Graph[V <: Any] {
     private var _lastVertex = -1

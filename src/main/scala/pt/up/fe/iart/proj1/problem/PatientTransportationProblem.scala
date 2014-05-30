@@ -1,6 +1,6 @@
 package pt.up.fe.iart.proj1.problem
 
-import pt.up.fe.iart.proj1.{problem, Problem}
+import pt.up.fe.iart.proj1.problem
 
 import pt.up.fe.iart.proj1.problem.Location._
 
@@ -10,6 +10,7 @@ import pt.up.fe.iart.proj1.collections.Graph
 import java.io.FileInputStream
 import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
 import pt.up.fe.iart.proj1.parser.{GraphVisitor, PTPParser, PTPLexer}
+import pt.up.fe.iart.proj1.solver.Problem
 
 class PatientTransportationProblem(map: Map[Int, Location], costs: Array[Array[Option[Double]]], ambulanceCapacity: Int, maxGasLevel: Double) extends Problem[State, Int] {
 

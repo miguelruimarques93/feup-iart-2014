@@ -1,4 +1,4 @@
-package pt.up.fe.iart.proj1
+package pt.up.fe.iart.proj1.solver
 
 abstract class Problem[State, Action] {
     def initialState: State
