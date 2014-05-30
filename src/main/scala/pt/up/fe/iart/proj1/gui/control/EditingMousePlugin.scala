@@ -126,6 +126,11 @@ class EditingMousePlugin[V, E](vertexFactory: (Point2D) => V, edgeFactory: (V, V
                     if (edge != null) {
                         graph.addEdge(edge, startVertex.get, vertex, edgeType)
                     }
+                } else { //create new vertex
+                val newVertex = vertexFactory(p)
+                    val layout = vv.getModel.getGraphLayout
+                    layout.getGraph.addVertex(newVertex)
+                    layout.setLocation(newVertex, vv.getRenderContext.getMultiLayerTransformer.inverseTransform(p))
                 }
                 vv.repaint()
             }
