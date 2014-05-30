@@ -12,7 +12,7 @@ import java.awt.event.{MouseEvent => AWTMouseEvent, KeyAdapter => AWTKeyAdapter,
 import javax.swing.table.DefaultTableModel
 import scala.swing.Table.{IntervalMode, ElementMode, AutoResizeMode}
 import pt.up.fe.iart.proj1._
-import pt.up.fe.iart.proj1.problem.{Patient, PatientTransportationProblem}
+import pt.up.fe.iart.proj1.problem.{PatientTransportationProblem}
 import scala.io.Position
 import scala.collection.mutable
 import scala.swing.event.SelectionChanged
@@ -23,6 +23,15 @@ import scala.swing.event.EditDone
 import scala.swing.event.SelectionChanged
 import pt.up.fe.iart.proj1.solver.Success
 import scala.swing.event.TableRowsSelected
+import org.jfree.data.category.DefaultCategoryDataset
+import scalax.chart.CategoryChart
+import scalax.chart.module.Imports
+import scalax.chart.module.ChartFactories.BarChart
+import org.jfree.chart.axis.{AxisLocation, CategoryAxis, NumberAxis}
+import org.jfree.chart.renderer.category.{BarRenderer, LineAndShapeRenderer}
+import org.jfree.chart.labels.StandardCategoryToolTipGenerator
+import org.jfree.chart.plot.{CategoryPlot, DatasetRenderingOrder}
+import org.jfree.chart.{JFreeChart, LegendItemCollection}
 
 case class TableColumnHeaderSelected(override val source: Table, column: Int, clickCount: Int = 1) extends TableEvent(source)
 
@@ -62,7 +71,7 @@ object Main extends SimpleSwingApplication {
 
     lazy val loadedMaps = new TableExtended("File", "# Nodes", "# Patients", "# Filiations", "# Gas Stations", "# Edges")
 
-    lazy val resultsTable = new TableExtended("Algorithm", "File", "Result", "Time", "# Expanded Nodes", "Total Cost")
+    lazy val resultsTable = new TableExtended("Algorithm", "File", "Ambulance Capacity", "Gas Tank Capacity", "Result", "Time", "# Expanded Nodes", "Total Cost")
 
     lazy val menu = new MenuBar {
         contents += new Menu("File") {
@@ -151,15 +160,33 @@ object Main extends SimpleSwingApplication {
                             }
 
                             Swing.onEDT {
-                                resultsTable.model.addRow(
-                                    Array[AnyRef](
-                                        alg.toString(),
-                                        file,
-                                        "Success",
-                                        t.toString,
-                                        numberExpanded.toString,
-                                        totalCost.toString
-                                    ))
+                                (0 until resultsTable.model.getRowCount).find { i =>
+                                    alg.toString() == resultsTable.model.getValueAt(i, 0) && file == resultsTable.model.getValueAt(i, 1) &&
+                                    ambCap.toString == resultsTable.model.getValueAt(i, 2) && gas.toString == resultsTable.model.getValueAt(i, 3)
+                                } match {
+                                    case Some(index) =>
+                                        resultsTable.model.setValueAt("Success", index, 4)
+                                        resultsTable.model.setValueAt(t.toString, index, 5)
+                                        resultsTable.model.setValueAt(numberExpanded.toString, index, 6)
+                                        resultsTable.model.setValueAt(totalCost.toString, index, 7)
+                                    case None =>
+                                        resultsTable.model.addRow(
+                                            Array[AnyRef](
+                                                alg.toString(),
+                                                file,
+                                                ambCap.toString,
+                                                gas.toString,
+                                                "Success",
+                                                t.toString,
+                                                numberExpanded.toString,
+                                                totalCost.toString
+                                            ))
+                                }
+
+
+
+
+
                             }
 
                             new Thread {
@@ -172,6 +199,8 @@ object Main extends SimpleSwingApplication {
                             Array[AnyRef](
                                 alg.toString(),
                                 file,
+                                ambCap.toString,
+                                gas.toString,/**/
                                 result.toString,
                                 t.toString
                             )))
@@ -231,6 +260,64 @@ object Main extends SimpleSwingApplication {
                     contents += depthLimitedForm
 
                     contents += new FlowPanel(FlowPanel.Alignment.Center)(runButton)
+                    contents += new FlowPanel(FlowPanel.Alignment.Center)(new Button(Action("Generate Chart"){
+                        val data = new DefaultCategoryDataset
+                        val data1 = new DefaultCategoryDataset
+
+                        for (i <- 0 until resultsTable.model.getRowCount) {
+                            data.addValue(resultsTable.model.getValueAt(i, 6).asInstanceOf[String].toInt, "Number Expanded Nodes", resultsTable.model.getValueAt(i, 0).toString)
+                            data.addValue(null, "Time", resultsTable.model.getValueAt(i, 0).toString)
+
+                            data1.addValue(null, "Number Expanded Nodes", resultsTable.model.getValueAt(i, 0).toString)
+                            data1.addValue(resultsTable.model.getValueAt(i, 5).asInstanceOf[String].toInt, "Time", resultsTable.model.getValueAt(i, 0).toString)
+                        }
+
+                        val chart1 = {
+                            val domainAxis = new CategoryAxis("Algorithm")
+                            val rangeAxis = new NumberAxis("# Expanded Nodes")
+                            val renderer1 = new BarRenderer
+                            renderer1.setMaximumBarWidth(0.45)
+                            val plot1 = new CategoryPlot(data, domainAxis, rangeAxis, renderer1) {
+                                override def getLegendItems: LegendItemCollection = {
+                                    val result = new LegendItemCollection
+
+
+                                    for {i <- 0 until getDatasetCount } {
+                                        val dataS = getDataset(i)
+                                        if (dataS != null) {
+                                            val r = getRenderer(i)
+                                            if (r != null) result.add(r.getLegendItem(i, i))
+                                        }
+                                    }
+
+                                    result
+                                }
+                            }
+
+                            new scalax.chart.Chart {
+                                override def peer: Imports.JFreeChart = new JFreeChart("", plot1)
+
+                                override def plot: Plot = plot1
+
+                                override type Plot = plot1.type
+
+                                plot.setDataset(1, data1);
+                                plot.mapDatasetToRangeAxis(1, 1);
+
+                                val axis2 = new NumberAxis("Time");
+                                plot.setRangeAxis(1, axis2);
+                                plot.setRangeAxisLocation(1, AxisLocation.BOTTOM_OR_RIGHT);
+                                val renderer2 = new BarRenderer();
+                                renderer2.setMaximumBarWidth(0.45)
+                                plot.setRenderer(1, renderer2);
+                            }
+                        }
+
+
+
+
+                        chart1.show()
+                    }))
 
                 }, BorderPanel.Position.North)
                 maximumSize = (contents.map(_.preferredSize.width).max, maximumSize.height)
