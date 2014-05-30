@@ -14,6 +14,7 @@ import edu.uci.ics.jung.visualization.renderers.Renderer.VertexLabel.Position
 import java.awt.geom.Point2D
 import java.awt.{BasicStroke, Color}
 import javax.swing.{JRootPane, WindowConstants}
+import scala.collection.Set
 
 class Viewer(g: Graph[problem.Location], rawSolution: List[(problem.Location, List[problem.Patient], Double)]) extends Dialog {
     private val verticesMap = g.verticesMap
@@ -87,8 +88,17 @@ class Viewer(g: Graph[problem.Location], rawSolution: List[(problem.Location, Li
         new Point2D.Double(vertex.position._1 + margin._1, vertex.position._2 + margin._2)
     }
 
+    private def calculateGraphSize = {
+        val vertices = g.vertices
+        vertices.map(_.position).unzip match {
+            case (xs, ys) =>
+                (xs.max + xs.min + 2 * margin._1, ys.max + ys.min + 2 * margin._2)
+        }
+
+    }
+
     lazy val graphVV = {
-        val size: Dimension = (800, 600)
+        val size: Dimension = calculateGraphSize
         val layout = new StaticLayoutExtended(graph, size)
 
         layout.setInitializer(initializer _)
@@ -120,10 +130,16 @@ class Viewer(g: Graph[problem.Location], rawSolution: List[(problem.Location, Li
 
         vv.getRenderer.getVertexLabelRenderer.setPosition(Position.CNTR)
 
+        vv.setPreferredSize(size);
+
         vv
     }
 
-    lazy val graphComponent = Component.wrap(graphVV)
+    lazy val graphComponent = {
+        val comp = Component.wrap(graphVV)
+        comp.preferredSize = graphVV.getSize()
+        comp
+    }
 
     title = "Viewer"
 
@@ -131,19 +147,24 @@ class Viewer(g: Graph[problem.Location], rawSolution: List[(problem.Location, Li
 
     lazy val gasLevelLabel = new Label()
 
-    contents = new BoxPanel(Orientation.Horizontal) {
-        contents += graphComponent
-        contents += new BoxPanel(Orientation.Vertical) {
-            contents += new FlowPanel(new Label("# Patients in Ambulance: "), numPatientsAmbulanceLabel)
-            contents += new FlowPanel(new Label("Gas Level: "), gasLevelLabel)
-        }
+    contents = new BorderPanel {
+        add(new BorderPanel {
+            add(new FlowPanel(new Label("# Patients in Ambulance: "), numPatientsAmbulanceLabel), BorderPanel.Position.East)
+            add(new FlowPanel(new Label("Gas Level: "), gasLevelLabel), BorderPanel.Position.West)
 
+            maximumSize = (maximumSize.width, contents.map(_.preferredSize.height).max)
+        }, BorderPanel.Position.North)
+        add(graphComponent, BorderPanel.Position.Center)
+
+        preferredSize = (contents.map(_.preferredSize.width).max, contents.map(_.preferredSize.height).max)
     }
 
     peer.setDefaultCloseOperation(WindowConstants.DO_NOTHING_ON_CLOSE)
 
-    if (size == new Dimension(0, 0)) pack()
+    pack()
     visible = true
+    println("this = " + this.preferredSize)
+    println("graphC = " + graphComponent.preferredSize)
 
     private def getVertex(index: Int) = {
         val vertexStates = vertexMap(index)

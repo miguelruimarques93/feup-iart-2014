@@ -12,5 +12,7 @@ object Conversions {
         override def create(): T = fun()
     }
 
-    implicit def PairToDimension(p: (Int, Int)) = new Dimension(p._1, p._2)
+    implicit def IntPairToDimension(p: (Int, Int)) = new Dimension(p._1, p._2)
+
+    implicit def DoublePairToDimension(p: (Double, Double)) = new Dimension(p._1.toInt, p._2.toInt)
 }
