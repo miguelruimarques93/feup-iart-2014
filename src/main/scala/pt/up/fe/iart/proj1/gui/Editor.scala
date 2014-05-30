@@ -45,7 +45,7 @@ object Editor extends SwingApplication {
 
     import Mode.Mode
 
-    lazy val fileChooser = new FileChooser()
+    lazy val fileChooser = new FileChooser(new java.io.File(".").getCanonicalFile)
 
     val graphModes = Array(Mode.Transform, Mode.Edit)
     val patientGraphModes = Array(Mode.Edit)
