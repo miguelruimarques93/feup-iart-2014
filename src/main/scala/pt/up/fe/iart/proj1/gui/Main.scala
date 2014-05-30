@@ -162,7 +162,7 @@ object Main extends SimpleSwingApplication {
                             Swing.onEDT {
                                 (0 until resultsTable.model.getRowCount).find { i =>
                                     alg.toString() == resultsTable.model.getValueAt(i, 0) && file == resultsTable.model.getValueAt(i, 1) &&
-                                    ambCap.toString == resultsTable.model.getValueAt(i, 2) && gas.toString == resultsTable.model.getValueAt(i, 3)
+                                        ambCap.toString == resultsTable.model.getValueAt(i, 2) && gas.toString == resultsTable.model.getValueAt(i, 3)
                                 } match {
                                     case Some(index) =>
                                         resultsTable.model.setValueAt("Success", index, 4)
@@ -376,3 +376,5 @@ object Main extends SimpleSwingApplication {
     }
 
 }
+
+

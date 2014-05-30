@@ -1,6 +1,3 @@
-// AmbulanceCapacity(6)
-// AmbulanceGasTank(100.0)
-
 GenericLocation((200,0))
 Filiation((200,100), false)
 GasStation((200,200))

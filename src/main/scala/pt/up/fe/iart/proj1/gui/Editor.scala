@@ -12,9 +12,7 @@ import java.awt.geom.Point2D
 import pt.up.fe.iart.proj1.gui.control._
 import edu.uci.ics.jung.visualization.control.ModalGraphMouse
 import pt.up.fe.iart.proj1.collections.Graph
-import java.io.{PrintWriter, FileInputStream}
-import org.antlr.v4.runtime.{CommonTokenStream, ANTLRInputStream}
-import pt.up.fe.iart.proj1.parser.{GraphVisitor, PTPParser, PTPLexer}
+import java.io.PrintWriter
 import pt.up.fe.iart.proj1.problem
 import scala.swing.TabbedPane.Page
 import scala.swing.Dimension
